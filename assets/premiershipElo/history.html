@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 12px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #404040;
+  stroke-width: 2;
+  shape-rendering: crispEdges;
+}
+.axis-label {
+	text-anchor: middle;
+	font-weight: 600;
+	font-size: 16px;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2px;
+}
+
+.svg-tooltip p {
+	font: 11px sans-serif;
+	font-weight: normal;
+}
+
+.svg-tooltip h3 {
+	font: 12px sans-serif;
+	font-weight: bold;
+}
+
+
+.events {
+	stroke: #000;
+	stroke-width: 1.5;
+}
+
+.winners {
+	stroke: #000;
+	stroke-width: 1.5;
+}
+
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v3.js"></script>
+<script>
+
+var margin = {top: 20, right: 80, bottom: 30, left: 80},
+    width = 660 - margin.left - margin.right,
+    height = 420 - margin.top - margin.bottom,
+	plotHeight = 230,
+	eventsHeight = 265,
+	winnersHeight = 0, winnersDepth = 15,
+	tooltipHeight = 280, tooltipx = 10;
+
+var parseDate = d3.time.format("%Y-%m-%d").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([plotHeight, 0]);
+
+var color = d3.scale.category10();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+	.ticks(6)
+    .orient("left");
+
+var line = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.rating); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	
+d3.csv("data/config.csv", function(error, config) {
+d3.csv("data/events.csv", function(error, events) {
+d3.csv("data/winners.csv", function(error, winners) {
+d3.csv("data/history.csv", function(error, history) {
+	if (error) throw error;
+  
+  
+  
+	//////////////////////////////////////////
+	//    Prep the ratings history graph    //
+	//////////////////////////////////////////
+  
+	history.forEach(function(d) {
+		d.date = parseDate(d.date);
+	});
+  
+	// which teams are we plotting?  Map an object for each (with color)
+	teamNames = [];config.forEach(function(d){teamNames.push(d.name)});
+	var teams = teamNames.map(function(name) {
+		return {
+			name: name,
+			color:config.filter(function(d){return d.name===name;})[0].color,			// not the best, but it'll do...
+			values: history.map(function(d) {
+				return {date: d.date, rating: +d[name], season: d.season};
+			})
+		};
+	});
+  
+	// which seasons are we plotting?  Split the team objects into seasons
+	var seasons = d3.map(teams[1].values, function(d){return d.season;}).keys();
+	var teamsBySeason = [];
+	for (i = 0; i < teams.length; ++i) {
+		for (j = 0; j < seasons.length; ++j) {
+			value = teams[i].values.filter(function(d){return d.season == seasons[j]});
+			if( value[0].rating != 0){	// filter out seasons where teams were relegated
+				teamsBySeason.push({name: teams[i].name, color: teams[i].color, values:value})
+			};
+		}
+	};
+  
+	// set the axis limits  
+	x.domain([parseDate("1993-01-01"), parseDate("2016-01-01")]);
+	y.domain([1050, 1550]);
+
+	// add x axis
+	svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + plotHeight + ")")
+		.call(xAxis);
+
+	// add y axis
+	svg.append("g")
+		.attr("class", "y axis")
+		.call(yAxis)
+    .append("text")
+		.attr("class","axis-label")
+		.attr("transform", "translate(-" + 3*margin.left/4 + "," + plotHeight/2 + ")rotate(-90)")
+		.text("Elo rating");
+	
+	// and on the right too	
+	svg.append("g")
+		.attr("class", "y axis")
+		.attr("transform", "translate(" + width + ",0)")
+		.call(yAxis.orient("right"))
+	  .selectAll("text");
+
+  
+
+	///////////////////////////
+	// Make the events panel //
+	///////////////////////////
+					
+	events.forEach(function(d) {
+		d.date = parseDate(d.date);
+		d.end = parseDate(d.end);
+	});
+				
+	// add g's to hold everything
+	var eventsPlot = svg.selectAll(".events")
+		.data(events).enter().append("g")
+		.attr("class","events");
+				
+				
+	// add the event lines
+	eventsPlot.append("rect")
+		.attr("height",plotHeight)
+		.attr("width",function(d){return 0.1 + x(d.end) - x(d.date)})
+		.attr("x",function(d){return x(d.date)})
+		.attr("opacity",0);
+				
+	// add the event circles
+	eventsPlot.append("circle")
+		.attr("r",5)
+		.attr("cy",eventsHeight)
+		.attr("cx", function(d){return x(d.date)})
+		.attr("fill", function(d){return d.fill})
+		.attr("opacity",1)
+				
+		.on("mouseover",function(d){
+					
+			// make line visible
+			d3.select(this.parentNode).select("rect")
+				.transition()
+				.duration(800)
+				.attr("opacity",0.3);
+							
+			// bubble up the circle
+			d3.select(this)
+				.transition()
+				.duration(800)
+				.attr("r",10)
+				.ease("elastic");
+							
+			// and add the tooltip
+			tooltip = d3.select(this.parentNode).append("foreignObject")
+				.attr("class","svg-tooltip")
+				.attr("x",tooltipx)
+				.attr("y",tooltipHeight)
+				.attr("width", 400)
+				.attr("height", 200).append("xhtml:div");																	
+			tooltip.append("h3")
+				.html(function(d){return d.title});
+			tooltip.append("p")
+				.html(function(d){return d.description});
+		})
+					
+		.on("mouseout",function(d){
+					
+			// make line invisible again
+			d3.select(this.parentNode).select("rect")
+				.transition()
+				.duration(800)
+				.attr("opacity",0);
+						
+			// bubble circle back to normal size
+			d3.select(this)
+				.transition()
+				.duration(800)
+				.attr("r",5)
+				.ease("elastic");
+						
+			// remove previous tooltip
+			svg.selectAll(".svg-tooltip").remove();
+		});
+		
+		
+		
+	//////////////////////////////////
+	//     Make the winners chart   //
+	//////////////////////////////////		
+				
+	for ( i=0 ; i<winners.length ; ++i){
+		winners[i].color = config.filter(function(d){return d.name===winners[i].winner;})[0].color;			// not the best, but it'll do...
+	};
+				
+				
+	// parse dates
+	winners.forEach(function(winners) {
+		winners.start = parseDate(winners.start);
+		winners.end = parseDate(winners.end);	
+	});
+				
+	// add offset and width to the array
+	for (var i = 0; i < winners.length; i++) {	
+		winners[i].offset = x(winners[i].start);
+		winners[i].width = x(winners[i].end) - x(winners[i].start);			
+	};
+				
+	// g's to hold everything
+	var winnersPlot = svg.selectAll(".winners")
+		.data(winners).enter().append("g")
+		.attr("class","winners");
+				
+	// add the score highlighting boxes
+	winnersPlot.append("rect")
+		.attr("height",plotHeight)
+		.attr("width",function(d){return d.width })
+		.attr("x",function(d){return d.offset })
+		.attr("opacity",0)
+				
+	// plot the score and add mouseovers
+	winnersPlot.append("rect")
+		.attr("height",winnersDepth)
+		.attr("width",function(d){return d.width })
+		.attr("x",function(d){return d.offset })
+		.attr("y",winnersHeight)
+		.attr("opacity",0.7)
+		.attr("fill",function(d){return d.color})
+				
+		.on("mouseover",function(d){
+						
+			// make line visible
+			d3.select(this.parentNode).select("rect")
+				.transition()
+				.duration(800)
+				.attr("opacity",0.15);					
+							
+			var currentScore = d.tooltip;
+			// add a tooltip with the score
+			tooltip = svg.append("foreignObject")
+				.attr("class","svg-tooltip")
+				.attr("x",tooltipx)
+				.attr("y",tooltipHeight)
+				.attr("width", 200)
+				.attr("height", 200).append("xhtml:div");																	
+			tooltip.append("h3")
+				.html(function(d){
+					return currentScore;
+				});	
+		})
+		.on("mouseout",function(d){
+					
+			// make line invisible again
+			d3.select(this.parentNode).select("rect")
+				.transition()
+				.duration(800)
+				.attr("opacity",0);
+							
+			// remove tooltip
+			svg.selectAll(".svg-tooltip").remove();
+						
+		});
+		
+	
+	
+	///////////////////////////
+	//    Plot the graph     //
+	///////////////////////////
+	
+	// add lines (the have to be on top for mouseover!)
+	svg.selectAll(".teams")
+		.data(teamsBySeason)
+      .enter().append("g")
+		.attr("class", function(d) {return d.name})
+      .append("path")
+		.attr("class", "line")
+		.attr("d", function(d) { return line(d.values); })
+		.attr("opacity",0.25)
+		.style("stroke", function(d) { return d.color; })
+		
+		.on("mouseover",function(d){
+			// which team has by highlighted?
+			team = d3.select(this.parentNode).attr("class");
+		
+			// fade in all lines for this team
+			svg.selectAll("." + team).selectAll("path")
+				.transition()
+				.duration(400)
+				.attr("opacity",1)
+				.style("stroke-width","3.5");
+		
+			// fade in team logo too
+			svg.selectAll("." + team +"Logo")
+				.attr("opacity",0)
+				.transition()
+				.duration(400)
+				.attr("opacity",1);
+		})
+		.on("mouseout",function(d){
+			// which team has been un-highlighted
+			team = d3.select(this.parentNode).attr("class");
+		
+			// fade out all lines for this team
+			svg.selectAll("." + team).selectAll("path")
+				.transition()
+				.duration(400)
+				.attr("opacity",0.25)
+				.style("stroke-width","2");;
+		
+			// fade out logo too
+			svg.selectAll("." + team +"Logo")
+				.attr("opacity",1)
+				.transition()
+				.duration(400)
+				.attr("opacity",0);
+		});
+
+	// load in the team logos (invisible to begin with)
+	svg.selectAll(".teamLogos")
+		.data(config)
+	  .enter().append("svg:image")
+		.attr("xlink:href", function(d){return "https://www.picodoc.org/wp-content/uploads/datavis/premiershipElo/data/" + d.name + ".svg"})
+		.attr("class",function(d){return d.name + "Logo"})
+		.attr("y",plotHeight - 100)
+		.attr("x",width - 100)
+		.attr("width",90)
+		.attr("height",90)
+		.attr("opacity",0);
+		
+	// load in the league logo
+	svg.selectAll(".leagueLogos")
+		.data(["premierLeague"])
+	  .enter().append("svg:image")
+		.attr("xlink:href", function(d){return "https://www.picodoc.org/wp-content/uploads/datavis/premiershipElo/data/" + d + ".svg"})
+		.attr("y",height - 90)
+		.attr("x",width - 100)
+		.attr("width",90)
+		.attr("height",90)
+		.attr("opacity",1);
+	
+})})})});
+
+</script>
