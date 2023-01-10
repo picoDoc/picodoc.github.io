@@ -27,6 +27,7 @@ url: "https://picodoc.github.io" # the base hostname & protocol for your site, e
 twitter_username: picodoco
 github_username: picoDoc
 linkedin_username: matthewddoherty
+permalink: /:title:output_ext
 
 # Build settings
 theme: minima
