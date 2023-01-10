@@ -14,7 +14,7 @@ Sports exchanges are a form of prediction market where users bet on the outcome 
 This is great for me as real-time betting data is a very rich data-set; through live odds we can essentially look at what the "collective mind" of the market is thinking.  So, anyway, back to the Superbowl!  I collected some of the fire-hose of data spewing from the betfair exchange during the match and crunched the numbers down into a more manageable form.  Let's have a look...
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/superbowl/index.html" width="100%" height="640" frameBorder="0"> </iframe>
+<iframe src="/assets/superbowl/index.html" width="100%" height="640" frameBorder="0"> </iframe>
 </div>
 
 Data is always much easier to understand when displayed visually in graphs and charts than as numbers in a spreadsheet.  In the graphic above I've made use of Mike Bostock's [d3.js](http://d3js.org/) which allows me to attach data to DOM elements.  So what are we looking at here? Well the visualization compresses over 300,000 data points collected during the game into something much more easily digestible. It's really 3 separate charts, displaying three different sets of data, so lets go through each in turn:
