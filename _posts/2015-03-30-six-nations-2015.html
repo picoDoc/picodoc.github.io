@@ -1,0 +1,47 @@
+---
+layout: post
+title: Six Nations 2015 - using data to tell a story of English woe
+date: 2015-03-30 08:52:30.000000000 +00:00
+type: post
+parent_id: '0'
+published: true
+password: ''
+status: publish
+categories:
+- sports
+tags: []
+meta:
+  _edit_last: '1'
+  _yoast_wpseo_focuskw: data
+  _yoast_wpseo_title: Six Nations 2015 - using data to tell a story of English woe
+  _yoast_wpseo_metadesc: Telling the story of the six nations rugby championship 2015
+    using sports exchange betting data
+  _yoast_wpseo_linkdex: '85'
+  _thumbnail_id: '448'
+  flavour_num_words: '1260'
+author:
+  login: picodoc
+  email: matt.d.doc@gmail.com
+  display_name: Matt Doherty
+  first_name: Matt
+  last_name: Doherty
+permalink: "/six-nations-2015/"
+---
+<p>This year's six nations championship will go down in history as one of the best ever (and not just because Ireland won for the second year in a row).  The final six hours of rugby on Saturday was some of the most exciting sports I've ever watched.  How many England fans would've believed going into the final day in first place and scoring 55 points against France wouldn't be enough to take home the trophy?  Madness.</p>
+<p>As <a href="http://fivethirtyeight.com/features/rich-data-poor-data/">Nate Silver</a> has pointed out at length, modern sports generates some tremendously rich datasets.  Previously I used kdb+ and d3.js to visualize sports exchange data and tell the story of a single game - <a href="https://www.picodoc.org/superbowl-xlix-data-visualization/" target="_blank">Superbowl XLIX</a>.  In this post I'm going to extend the same techniques to cover multiple prediction markets and the relationships between them: the key games of the six nations championship and the overall title odds.  Over the course of the championship over 20 million data points were captured from betfair in real time and streamed into a kdb+ database.  I've used this data to create a visual story of the whole championship.</p>
+<p>If I’ve done my job well the interactive charts below shouldn't need too much explaining, but I'll give a quick summary anyway. The top chart shows the changing title odds for each team over the last 6 weeks of the championship.  Hover over the square icons to see the championship table snapshot at different times, and click on one of the rugby balls to bring up an interactive visualization of in-match data for any one rugby match. The volumes relate to the number of matched bets on the sports exchange in a given time window.</p>
+<p>&nbsp;</p>
+<p>[caption id="" align="aligncenter" width="750" caption="The Six Nations 2015"][iframe src="https://www.picodoc.org/wp-content/uploads/datavis/6nations/vis.html" width=100% height=780][/iframe][/caption]</p>
+<p>&nbsp;</p>
+<p>The most exciting day was of course the final one, so my second chart is a close-up of the madness for your viewing pleasure. Notice the nice flat pre-match odds descending into chaos after the first kick-off? That’s chart-speak for a really exciting day of rugby! It's clear from this how many people were backing Wales to win after the end of their match against Italy which finished at 2.20pm. By that point they had built up a big lead in terms of their points difference over England and Ireland. Then as Ireland moved more ahead of Scotland in the second half of the Ireland vs. Scotland match, the Welsh title chances diminished and finally disappeared. In the final match (England vs. France), you can see how the championship odds spiked every time either England or France scored a try.</p>
+<p>&nbsp;</p>
+<p>[caption id="" align="aligncenter" width="750" caption="Super Saturday"][iframe src="https://www.picodoc.org/wp-content/uploads/datavis/6nationsfinal/vis.html" width=100% height=780][/iframe][/caption]</p>
+<p>&nbsp;</p>
+<p>There's also a few other cool things that jump out to me:</p>
+<ul>
+<li>See the tiny little blip of blue at the bottom at about 1 o'clock?  That's some very optimistic Frenchmen who still thought a Gallic victory was a possibility (technically it was...technically)</li>
+<li>Wales beating Ireland on the 14th March benefited England's championship chances far more than their own, which stayed more or less the same.  The lesson here is the Celtic nations should stick together.</li>
+<li>England didn't win.  Did I mention that already?  Just in case anyone wasn't aware.  Ireland won.</li>
+</ul>
+<p>&nbsp;</p>
+<p>I'm sure there's plenty of other cool insight hiding in this dataset, so feel free to comment on any cool stuff you notice.  Until next time!</p>
