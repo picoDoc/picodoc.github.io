@@ -27,4 +27,4 @@ There's also a few other cool things that jump out to me:
 * Wales beating Ireland on the 14th March benefited England's championship chances far more than their own, which stayed more or less the same.  The lesson here is the Celtic nations should stick together.
 * England didn't win.  Did I mention that already?  Just in case anyone wasn't aware.  Ireland won.
 
-I'm sure there's plenty of other cool insight hiding in this dataset, so feel free to comment on any cool stuff you notice.  Until next time!
+I'm sure there's plenty of other cool insight hiding in this dataset, so feel free to comment on any cool stuff you notice.

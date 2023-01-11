@@ -8,6 +8,8 @@ usemathjax: true
 
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
 
+__Full credit for this post goes to Ryan McCarron__
+
 _“One does not inhabit a country; one inhabits a language.” Emil Cioran_
 
 How we talk to one another depends largely on the current circumstances. From “yes Boss let’s shift these paradigms” to “running late cu in 5”; each situation with a different person or group requires a different lexical toolbox to get the point across, to enable rapid conversation, or even more fundamentally to show you are part of the group you’re talking to.

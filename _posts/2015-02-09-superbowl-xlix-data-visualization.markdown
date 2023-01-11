@@ -34,5 +34,3 @@ So looking at this data we can really peer into the collective mind of the marke
 * There are a number of points in the game where the odds shift massively very quickly.  Interceptions are accompanied by very sharp shifts, as the market obviously can't see them coming!  In the final minutes of the game we can see some of the most dramatic shifts.  First there's a big shift to Seattle when Russell Wilson makes a [big pass](https://www.youtube.com/watch?v=fKOLqM-LnA0) to put the Seahawks close to the endzone.  Then an even more dramatic shift back when his next pass is [intercepted at the goal line](https://www.youtube.com/watch?v=U7rPIg7ZNQ8) to seal the victory for New England.
 
 In many way this is the visual analogue of a match report, where we're using colours and shapes to tell the story of the game. A picture is worth a thousand words! The features above are just a few quick observations based on this one visual, I'm sure there's plenty more insight waiting to be discovered in such a rich dataset.
-
-Until next time!

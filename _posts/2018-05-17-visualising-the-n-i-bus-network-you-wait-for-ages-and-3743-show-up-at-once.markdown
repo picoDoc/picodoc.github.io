@@ -6,6 +6,8 @@ date: 2018-05-17 10:16:11.000000000 +00:00
 permalink: "/visualising-the-n-i-bus-network-you-wait-for-ages-and-3743-show-up-at-once/"
 ---
 
+__Full credit for this post goes to Ryan McCarron__
+
 Translink recently made available their set of Ulsterbus, Goldline and Metro timetables and routes on [Open Data NI](https://www.opendatani.gov.uk/organization/translink). We combined these data sets to find the expected position of each bus in the dataset at one minute intervals throughout the 3,743 valid timetabled routes listed.
 
 <div class="responsive-wrap">

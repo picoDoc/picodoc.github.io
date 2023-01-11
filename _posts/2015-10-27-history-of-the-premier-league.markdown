@@ -45,4 +45,4 @@ TV revenues for the Premier league have risen from [£191 million in 1992, to £
 
 Another possible contributing factor in this inequality is the [Bosman ruling](https://en.wikipedia.org/wiki/Bosman_ruling). This ruling allowed players at the end of a contract to move to another club without a transfer fee being paid. This makes it harder for clubs to profit from selling players who they’d had helped to develop, and UEFA have declared that they are seeking to repair aspects of the ruling, because it was believed to be the cause of the increasing rich-poor gap between elite and smaller clubs.
 
-So anyway, some cool data to look at I think. Until next time!
+So anyway, some cool data to look at I think.

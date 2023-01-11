@@ -4,6 +4,8 @@ title: London by Firelight
 date: 2015-12-14 12:05:09.000000000 +00:00
 ---
 
+__Full credit for this post goes to Ryan McCarron__
+
 Fire is pretty great.
 
 For nearly half a million years, humans have been using it to provide light, warmth, tastier, healthier food and eventually assist in tool-making and communication. But when fire becomes uncontrolled, the first thought to mind is “who will help, and when will they be here?” If you’re a pyrophobe, this question probably comes to mind a lot more often. The first answer is pretty self-evident; that’s why we have various fire services. The “when” is a little trickier. London, the largest city in Europe, has an average response time of the London Fire Brigade (LFB) of around 5 minutes and 30 seconds. But let’s delve a little deeper, to put the pyrophobe’s mind at rest.
