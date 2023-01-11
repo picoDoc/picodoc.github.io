@@ -1,0 +1,171 @@
+<html>
+<head bgcolor="#025855">
+<meta charset="UTF-8">
+<style type="text/css">
+body {
+    width:40%;
+    margin: auto;
+    font: 10px sans-serif;
+}
+
+
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.bar {
+  fill: steelblue;
+  opacity: 0.5;
+}
+
+.bar2 {
+  fill: red;
+  opacity: 0.5;
+}
+
+.bar3 {
+  fill: steelblue;
+  opacity: 0.5;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.bar2:hover {
+  fill: grey;
+}
+
+
+</style>
+</head>
+<body bgcolor="#FFFFFF">
+<script src="d3.min_.js"></script>
+<div id="linkChartHolder"></div>
+<script>
+
+
+
+function typeBar(d) {
+  d.avCounts = +d.avCounts;
+  d.selectCounts = +d.selectCounts;
+  return d;
+}
+
+function bars(data){
+var bars = svgBar.selectAll(".bar2").data(data)
+
+    bars.transition()
+      .duration(500)
+      .attr("y", function(d) { return yBar(d.selectCounts); })
+      .attr("height", function(d) { return heightBar - yBar(d.selectCounts); })
+}
+        
+var dateAxis=[],
+    dataHolder,
+    heightPad=1.3;
+
+var clo=0,
+    xBar,
+    yBar,
+    svgBar,
+    gBar;
+
+
+// after setting up the metric trace, set up the initial link breakdown 
+// chart, which can then be modified instead of being drawn anew
+
+var marginBar = {top: 30, right: 20, bottom: 30, left: 50},
+    widthBar = Math.floor(window.innerWidth*0.4) - marginBar.left - marginBar.right,
+    heightBar = Math.floor(window.innerHeight*1.0) - marginBar.top - marginBar.bottom;
+    //widthBar = 400 - margin.left - margin.right,
+    //heightBar = 300 - margin.top - margin.bottom;
+
+xBar = d3.scale.ordinal()
+    .rangeBands([10, widthBar], -0.1);
+
+yBar = d3.scale.linear()
+    .range([heightBar, 0]);
+
+var xAxisBar = d3.svg.axis()
+    .scale(xBar)
+    //.ticks(0, 20, 10)
+    //.orient("bottom")
+    .tickValues(d3.range(0, 22, 2));
+
+var yAxisBar = d3.svg.axis()
+    .scale(yBar)
+    .orient("left")
+    .ticks(5);
+
+svgBar = d3.select("body").append("svg")
+    .attr("width", widthBar + marginBar.left + marginBar.right)
+    .attr("height", heightBar + marginBar.top + marginBar.bottom)
+    .append("g").attr("transform", "translate(" + marginBar.left + "," + marginBar.top + ")");
+
+d3.csv("rComm_thresh_test_actualTime_DOGE_avHist_peakDoge.txt", typeBar, function(data) {
+
+    data=data.slice(0,51);
+    
+    // define the max ranges from the data - using heightPad factor give some breathing room
+    xBar.domain(data.map(function(d) { return d.mids; }));
+    yBar.domain([0, d3.max(data, function(d) { return d.avCounts*heightPad; })]);
+
+    svgBar.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate("+(-5)+"," + heightBar + ")")
+      .call(xAxisBar)
+      .append("text")
+      .attr("x", widthBar*0.5+marginBar.left)
+      .attr("y", 20)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Lexical Separation");;	
+
+    svgBar.append("g")
+      .attr("class", "y axis")
+      .call(yAxisBar)
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Counts");
+
+    gBar=svgBar.selectAll(".bar")
+      .data(data)
+      .enter().append("g")
+
+    gBar.append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return xBar(d.mids); })
+      .attr("width", xBar.rangeBand()-0.5)
+      .attr("y", function(d) { return yBar(d.avCounts); })
+      .attr("height", function(d) { return heightBar - yBar(d.avCounts); });
+
+    //gBar.append("rect")
+    //  .attr("class", "bar2")
+    //  .attr("x", function(d) { return xBar(d.mids); })
+    //  .attr("width", xBar.rangeBand()-0.5)
+    //  .attr("y", function(d) { return yBar(d.selectCounts); })
+    //  .attr("height", function(d) { return heightBar - yBar(d.selectCounts); });
+      
+});
+
+</script>
+</body>
+</html>

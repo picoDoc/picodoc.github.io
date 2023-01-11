@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Campaign spending shortfall</title>
+
+    <meta charset="UTF-8">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.1/dc.css" rel="stylesheet" type="text/css"/>
+    <style>
+        .dc-chart g.row text {fill: black;}
+        .container{
+            max-width: 1050px; //Or whatever value you need
+        }
+     
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div align="right">
+        <img alt="thedetail" src="detail.png" width="100"/>
+    </div>
+    
+    <h3>May 2016 NI Assembly Election Spend and Donations</h3>
+
+    <div>
+        Click on the map to see more information on the amount of money unaccounted for by constituency
+        <a href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
+    </div>
+
+    <div id="lgd-map">
+        <div class="clearfix"></div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+
+        <div id="party-spend-chart">
+            Overall spend by each party’s elected candidates (£):
+            <div class="clearfix"></div>
+        </div>
+
+        <div id="party-chart">
+            Monies unaccounted for by party (£):
+            <div class="clearfix"></div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <b>Elected candidates listed in order of largest shortfall:</b>
+        <table class="table table-hover dc-data-table">
+            <thead>
+            <tr class="header">
+                <th>Name</th>
+                <th>Party</th>
+                <th>Constituency</th>
+                <th>Expenditure</th>
+                <th>Contributions</th>
+                <th>Source</th>
+                <th>Shortfall</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.1/dc.js"></script>
+
+<script type="text/javascript">
+
+    var lgdMap = dc.geoChoroplethChart("#lgd-map");
+    var partyChart = dc.rowChart('#party-chart');
+    var partySpendChart = dc.rowChart('#party-spend-chart');
+    var candidateTable = dc.dataTable('.dc-data-table');
+
+    d3.csv("donations.csv", function (raw_data) {
+
+        // do some data cleanup/prep
+        raw_data.forEach(function(d) {
+            d.expenditure = +d.expenditure;
+            d.provided_by_candidate = +d.provided_by_candidate;
+            d.donations = +d.donations;
+            d.combination = +d.combination;
+            d.shortfall = +d.shortfall
+        });
+
+        // setup the colors
+        partyColors = {
+            "TUV":"#4040EC", 
+            "Alliance":"#FFEC40", 
+            "SDLP":"#D96640", 
+            "People Before Profit Alliance":"#FF66B2", 
+            "UUP":"#89D7ED", 
+            "DUP":"#FFA040", 
+            "Independent":"#8CB2B2", 
+            "Sinn Féin":"#40B240", 
+            "Green Party":"#66FF66"
+        }
+
+        partyColorScale = d3.scale.ordinal().domain(["TUV", "Alliance", "SDLP", "People Before Profit Alliance", "UUP", "DUP", "Independent", "Sinn Féin", "Green Party"])
+                                            .range(["#4040EC", "#FFEC40", "#D96640", "#FF66B2", "#89D7ED", "#FFA040", "#8CB2B2", "#40B240", "#66FF66"]);
+
+        // format numbers nicely
+        var numberFormat = d3.format(",.2f");
+
+        var data = crossfilter(raw_data);
+
+    d3.json("NI_WMC.json", function (lgdJson) {
+
+///////////////////////////////// main N.I. map chart //////////////////////////////////////////
+
+            var lgds = data.dimension(function (d) {
+                return d["constituency"];
+            });
+
+            var lgdDonations = lgds.group().reduce(
+
+                // for adding data to the filter results 
+                function (p, v) {
+                    ++p.count;
+                    p.sumExpenditure += v.expenditure;
+                    p.avgExpenditure = p.sumExpenditure / (p.count || 1);
+                    p.sumShortfall += v.shortfall;
+                    p.avgShortfall = p.sumShortfall / (p.count || 1);
+                    return p;
+                },
+                // callback for when data is removed from the current filter results 
+                function (p, v) {
+                    --p.count;
+                    p.sumExpenditure -= v.expenditure;
+                    p.avgExpenditure = p.sumExpenditure / (p.count || 1);
+                    p.sumShortfall -= v.shortfall;
+                    p.avgShortfall = p.sumShortfall / (p.count || 1);
+                    return p;
+                },
+                // initialize p 
+                function () {
+                    return {
+                        count: 0,
+                        sumExpenditure: 0,
+                        sumShortfall: 0,
+                    };
+                }
+            );
+            
+            var projection = d3.geo.mercator()
+                .center([-7.0,54.05])
+                .scale(6500)
+                .rotate([0,0]);
+
+            lgdMap
+                .width(1000)
+                .height(250)
+                .dimension(lgds)
+                .group(lgdDonations)
+                .valueAccessor(function (p) {
+                    return Math.round(p.value.sumShortfall * 100) / 100;
+                })
+                .colors(d3.scale.linear().domain([0,12000]).range(["#E2F2FF", "#0061B5"]))
+                .overlayGeoJson(lgdJson.features, "wmc", function (d) {
+                    return d.properties.name;
+                })
+                .title(function (d) {
+                    return d.key + "\nTotal shortfall: £" + numberFormat(d.value);
+                })
+                .projection(projection);
+
+///////////////////////////////// party row chart //////////////////////////////////////////
+
+            var party = data.dimension(function (d) {
+                return d["party"];
+            });
+
+            var partyDonations = party.group().reduce(
+
+                // for adding data to the filter results 
+                function (p, v) {
+                    ++p.count;
+                    p.sumExpenditure += v.expenditure;
+                    p.avgExpenditure = p.sumExpenditure / (p.count || 1);
+                    p.sumShortfall += v.shortfall;
+                    p.avgShortfall = p.sumShortfall / (p.count || 1);
+                    return p;
+                },
+                // callback for when data is removed from the current filter results 
+                function (p, v) {
+                    --p.count;
+                    p.sumExpenditure -= v.expenditure;
+                    p.avgExpenditure = p.sumExpenditure / (p.count || 1);
+                    p.sumShortfall -= v.shortfall;
+                    p.avgShortfall = p.sumShortfall / (p.count || 1);
+                    return p;
+                },
+                // initialize p 
+                function () {
+                    return {
+                        count: 0,
+                        sumExpenditure: 0,
+                        sumShortfall: 0,
+                    };
+                }
+            );
+
+            partyChart
+                .width(500)
+                .height(250)
+                .margins({top: 20, left: 50, right: 50, bottom: 45})
+                .group(partyDonations)
+                .dimension(party)
+                .valueAccessor(function (p) {
+                    return Math.round(p.value.sumShortfall * 100) / 100;
+                })
+                .label(function (d) {
+                    return d.key;
+                })
+                .colors(partyColorScale)
+                .title(function (d) {
+                    return "Total " + d.key + " shortfall: £" + numberFormat(d.value.sumShortfall);
+                })
+                .ordering(function(d) { return -d.value.sumShortfall; })
+                .elasticX(true)
+                .xAxis().ticks(4);
+
+            partySpendChart
+                .width(500)
+                .height(250)
+                .margins({top: 20, left: 50, right: 50, bottom: 45})
+                .group(partyDonations)
+                .dimension(party)
+                .valueAccessor(function (p) {
+                    return Math.round(p.value.sumExpenditure * 100) / 100;
+                })
+                .label(function (d) {
+                    return d.key;
+                })
+                .colors(partyColorScale)
+                .title(function (d) {
+                    return "Total " + d.key + " spend: £" + numberFormat(d.value.sumExpenditure);
+                })
+                .ordering(function(d) { return -d.value.sumExpenditure; })
+                .elasticX(true)
+                .xAxis().ticks(4);
+
+///////////////////////////////// detailed MLA info table //////////////////////////////////////////
+
+            var mla = data.dimension(function (d) {
+                return d.name ;
+            });
+            var mlaShortfall = mla.group().reduceSum(function (d) {
+                return d["shortfall"];
+            });
+
+            candidateTable
+                .dimension(mla)
+                .group(function(d) {return " ";})
+                .size(Infinity)
+                .beginSlice(0)
+                .endSlice(6)
+                .columns([
+                    function(d) { return d.name; },
+                    function(d) { return d.party; },
+                    function(d) { return d.constituency; },
+                    function(d) { return "£" + numberFormat(d.expenditure); },
+                    function(d) { return "£" + numberFormat(d.contributions); },
+                    function(d) { return d.donations_from; },
+                    function(d) { return "£" + numberFormat(d.shortfall); }
+                ])
+                .sortBy(function (d) { return d.shortfall; })
+                .order(d3.descending)
+                .renderlet(function (table) {
+                    table.selectAll(".dc-table-group").classed("info", true);
+                })
+                .renderlet(function(chart){
+                    chart.selectAll('tr.dc-table-row')
+                         .style('background-color', function(d) { 
+                             return partyColors[d.party]; 
+                        });
+                });
+
+            dc.renderAll();
+
+    })})
+
+</script>
+</body>
+</html>

@@ -6,7 +6,7 @@ permalink: "/uk-electoral-politics-what-makes-a-seat-safe/"
 ---
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/election/election1.html" width="100%" height="740" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/election/election1.html" width="100%" height="740" frameBorder="0"> </iframe>
 </div>
 
 Most of us have seen the phrase 'safe seat' used many times in political discourse.  According to wikipedia <q><em>A safe seat is a seat in a legislative body which is regarded as fully secured, either by a certain political party, the incumbent representative personally or a combination of both.</em></q>  So that's great, but why are some seats 'safe' and other are not?  What differentiates a safe seat from a marginal?
@@ -20,7 +20,7 @@ So I've collected all this data into a digestible form: for each constituency I 
 So this is pretty cool, alot of the insight contained in this matrix might be considered common sense, but it's still very nice to see this backed up by hard data.  So for the main two parties we can dig in a little and have a look at the best and worst predictors at the constituency level.  Let's have a look at Labour first:
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/election/election2.html" width="100%" height="740" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/election/election2.html" width="100%" height="740" frameBorder="0"> </iframe>
 </div>
 
 So the best positive predictors are as you might expect for a major left-wing party: in more socially deprived constituencies people are more likely to vote for Labour.  The two best negative predictors are perhaps a little more interesting: percentage over 65 and houses sold.  So I guess this backs up the cliche that people tend to move to the political right as they get older, and also if they own (or are interested in selling) their house.  These plots are also interesting as we can see clearly some outliers from the trend.  For example, UKIP's sole victory in Clacton is visible as an outlier in the top left plot, as is Nick Clegg's constituency in Sheffield.  Similarly we can see a group of points in Scotland - mainly inner city Glasgow - which seem like natural Labour seats but were won by the SNP.  These points are a nice illustration of the UK's slightly unusual 'pseudo two party' system, where there are two main parties surrounded by a few smaller ones who get seats based on local politics or particular issues.
@@ -28,7 +28,7 @@ So the best positive predictors are as you might expect for a major left-wing pa
 As you might expect the best positive and negative predictors of Conservative electoral success are almost exactly the opposite of Labour's:
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/election/election3.html" width="100%" height="740" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/election/election3.html" width="100%" height="740" frameBorder="0"> </iframe>
 </div>
 
 If we look back to the correlation plot however we can see a few other interesting predictors for each of the main two parties.  One of the best negative predictors for the Conservative party is Latitude!  Very few people in the North of England, and almost no one in Scotland vote Tory.  Area is a reasonably good negative predictor of Labour voting success, as Labour tend to do much better in inner cities.  This is why electoral maps of the UK often seem very blue: Labour's constituents are live much closer together in small constituencies!

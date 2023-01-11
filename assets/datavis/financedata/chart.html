@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 11px sans-serif;
+  
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+  stroke-width: ;
+}
+
+
+
+.line {
+  fill: none;
+  stroke-width: 2px;
+}
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v3.js"></script>
+<script>
+
+var margin = {top: 20, right: 50, bottom: 30, left: 50},
+    width = 600 - margin.left - margin.right,
+    height = 250 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%d/%m/%Y %H:%M").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y1 = d3.scale.linear()
+    .range([height, 0]);
+	
+var y2 = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+	.ticks(6);
+
+var yAxis1 = d3.svg.axis()
+    .scale(y1)
+    .orient("left");
+	
+var yAxis2 = d3.svg.axis()
+    .scale(y2)
+    .orient("right");
+
+var line1 = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y1(d.AAPL); });
+	
+var line2 = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y2(d.EUR_USD); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("data.csv", function(error, data) {
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.AAPL = +d.AAPL;
+	d.EUR_USD = +d.EUR_USD;
+  });
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  y1.domain(d3.extent(data, function(d) { return d.AAPL; }));
+  y2.domain(d3.extent(data, function(d) { return d.EUR_USD; }));
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+	  
+  svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", line1)
+	  .attr("stroke","Tomato");
+	  
+  svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", line2)
+	  .attr("stroke","RoyalBlue");
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis1)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Price ($)");
+	  
+  svg.append("g")
+      .attr("class", "y axis")
+	  .attr("transform","translate(" + width + ",0)")
+      .call(yAxis2)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -16)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Exchange rate");
+	  
+});
+
+</script>

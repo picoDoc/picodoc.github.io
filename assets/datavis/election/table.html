@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+	font: 12px sans-serif;
+}
+
+table, tr {
+	border: 2px solid black;
+}
+
+tr, th { height: 50px; }
+
+th {
+	font: 16px sans-serif;
+	font-weight: bold;
+}
+
+td {
+    padding: 5px;
+}
+
+table {
+	width: 660px;
+    border-collapse: collapse;
+}
+</style>
+
+<body>
+
+	<script src="https://d3js.org/d3.v3.js"></script>
+	
+	<script>
+	
+	var eventName = "General Election 2015";
+	
+	var cells;
+	
+	d3.csv("data/" + eventName + "/results.csv", function(error, data) {
+		
+		var columnNames = ['Declaration','Result','Constituency','Headline'];
+		
+		var columns = [
+			{name:'Declaration', width: "60px"},
+			{name:'Result', width: "100px"},
+			{name:'Constituency', width: "200px"},
+			{name:'Headline', width: "300px"}		
+		];
+		
+		
+		var table = d3.select("body").append("table"),
+			thead = table.append("thead"),
+			tbody = table.append("tbody");
+
+		// append the header row
+		thead.append("tr")
+			.selectAll("th")
+			.data(columns)
+			.enter()
+			.append("th")
+			.text(function(column) { return column.name; })
+			.attr("width", function(column) { return column.width});
+
+		// create a row for each object in the data
+		var rows = tbody.selectAll("tr")
+			.data(data)
+			.enter()
+			.append("tr");
+
+		// create a cell in each row for each column
+		 cells = rows.selectAll("td")
+			.data(function(row) {
+				return columnNames.map(function(column) {
+					return {column: column, value: row[column], color:row.color, link:row.Link};
+				});
+			})
+			.enter()
+			.append("td")
+			.style("background-color",function(d) { return d.color })
+			.append("a")
+			.html(function(d) { return d.value; })
+			.each(function(d) {
+				var cell = d3.select(this);
+				if ("Constituency" === d.column) {cell.attr("href",d.link)};
+            });
+			
+	});
+
+	</script>
+	
+</body>

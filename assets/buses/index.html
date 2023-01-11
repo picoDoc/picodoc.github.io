@@ -1,0 +1,193 @@
+<head>
+  <meta charset="utf-8">
+
+  <style type="text/css">
+
+    #map img{
+      border-radius:0; !important
+    }
+
+    @media (max-width: 639px) {
+      .map{height:240px; width:240px;}
+      h2 {font-size:1em;}
+    }
+    @media (min-width: 640px) {
+      .map{height:500px; width:650px;}
+    }
+
+    .map-wrapper{
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      -webkit-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .map-controls{
+      position:absolute;
+      bottom:0px;
+      left:0;
+      padding:8px 12px;
+      background-color:rgba(112,112,112,0.5);
+      z-index:100
+    }
+
+    .map-pause{
+      width:1.2em;
+      height:1.2em;
+      padding:1px;
+      border-radius:3px;
+      cursor:pointer;
+      background-color:white;
+      background-image:url("./img/play.png");
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size:16px;
+      float:left
+    }
+
+    .map-pause.playing{
+      background-image:url("./img/pause.png")
+    }
+
+    .map-slider{
+      width:174px;
+      float:right;
+      margin-left:18px;
+      top:3px
+    }
+
+    .map-header{
+      position:absolute;
+      right:10px;
+      color:#fff;
+      text-align:right;
+      font-family:Menlo,Monaco,"Andale Mono","lucida console","Courier New",DotumChe,monospace;
+      z-index:100;
+      line-height:0.3em
+    }
+
+  </style>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="./torque.js"></script>
+
+</head>
+
+<body>
+
+  <div class="map-wrapper map">
+    <h2 class="map-header">
+      <div class="map-time"></div>
+    </h2>
+    <div class="map-controls">
+      <div class="map-pause"></div>
+      <div class="map-slider"></div>
+    </div>
+    <div id="map" class="map"></div>
+  </div>
+  <div class="entry-content"><link rel="stylesheet" href="./stylesheets/buses.css" />
+
+  <script>
+
+    // adapted from http://toddwschneider.com/posts/a-tale-of-twenty-two-million-citi-bikes-analyzing-the-nyc-bike-share-system/
+    var utc_to_edt_am_pm = function(utc_date) {
+      edt_date = new Date(Number(utc_date));
+      var hours = edt_date.getUTCHours();
+      var minutes = edt_date.getUTCMinutes();
+      var ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      minutes = minutes < 10 ? '0' + minutes : minutes;
+      return hours + ':' + minutes + ' ' + ampm;
+    };
+
+    if ( $(window).width() > 639) {
+      STARTING_ZOOM = 8
+    }
+    else {
+      STARTING_ZOOM = 7
+    }
+
+    var map = new L.Map('map', {
+      zoomControl: true,
+      center: [54.6, -6.8],
+      zoom: STARTING_ZOOM,
+      minZoom: 6,
+      maxZoom: 12,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      touchZoom: false
+    });
+
+    L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>, &copy; <a href="https://carto.com/attributions">CartoDB</a>'
+    }).addTo(map);
+
+    if ( $(window).width() < 768) {
+      $('.leaflet-control-attribution').hide()
+    }
+
+    var CARTOCSS = [
+      'Map {',
+      '-torque-time-attribute: "date";',
+      '-torque-aggregation-function: "count(cartodb_id)";',
+      '-torque-frame-count: 1374;',
+      '-torque-animation-duration: 100;',
+      '-torque-resolution: 1',
+      '}',
+      '#layer {',
+      '  marker-width: 2.5;',
+      '  marker-type: ellipse;',
+      '  marker-fill-opacity: 0.8;',
+      '  comp-op: "lighten";',
+      '  [value = 1] { marker-fill: #f7931d; }',
+      '  [value = 2] { marker-fill: #ee1d23; }',
+      '  [value = 3] { marker-fill: #00a99d; }',
+      '  [value = 4] { marker-fill: #a72b30; }',
+      '  [value = 5] { marker-fill: #50b8e8; }',
+      '  [value = 6] { marker-fill: #005824; }',
+      '  [value = 7] { marker-fill: #a6ce39; }',
+      '  [value = 8] { marker-fill: #6e2c91; }',
+      '  [value = 9] { marker-fill: #ed028c; }',
+      '  [value = 10] { marker-fill: #afaad3; }',
+      '  [value = 11] { marker-fill: #835237; }',
+      '  [value = 12] { marker-fill: #0072bc; }',
+      '  [value = 13] { marker-fill: #0081c3; }',
+      '}'
+    ].join('\n');
+
+    var torqueLayer = new L.TorqueLayer({
+      tileJSON: './tile.json',
+      cartocss: CARTOCSS
+    });
+    torqueLayer.addTo(map);
+    torqueLayer.play()
+
+    $(".map-pause").addClass("playing");
+    var $slider = $(".map-slider");
+
+    $slider.slider({
+      min: 0,
+      max: torqueLayer.options.steps,
+      value: 0,
+      step: 1,
+      slide: function(event, ui) {
+        var step = ui.value;
+        torqueLayer.setStep(step);
+      }
+    });
+
+    torqueLayer.on('change:time', function(changes) {
+      $slider.slider({value: changes.step});
+      $(".map-time").text(utc_to_edt_am_pm(changes.time));
+
+    });
+
+    $(".map-pause").on("click", function() {
+      torqueLayer.toggle();
+      $(this).toggleClass("playing");
+    });
+  </script>
+
+</body>

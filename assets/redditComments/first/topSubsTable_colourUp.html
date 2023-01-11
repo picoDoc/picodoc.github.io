@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            table {
+                border-collapse: collapse;
+                font: 12px sans-serif;
+                border: 2px solid black;
+                margin: 0 auto;
+            }
+            
+            .topRow {
+                font-weight: bold;
+                background-color: orange;
+            }
+  
+            .tableBody {
+                border: 1px solid black;
+                padding: 4px;
+            }
+  
+        </style>
+    </head>
+    <body>
+        <script src="d3.min_.js"></script>
+
+        <script type="text/javascript"charset="utf-8">
+
+            // define the colour palette
+            var color = d3.scale.linear()
+                .domain([3, 0.3, 0.01])
+                .range(["orange", "white", "royalBlue"]);
+
+            d3.text("freqTable_remote_recent_2016-02-22_top10.csv", function(data) {
+
+                var parsedCSV = d3.csv.parseRows(data);
+                
+                d3.select("body")
+                    .append("table")
+
+                    // select rows, add new rows for each row of data in the csv	
+                    .selectAll("tr")
+                    .data(parsedCSV).enter()
+                    .append("tr")
+                    .on("mouseover", function(){d3.select(this).style("background-color", "aliceblue")})
+                    .on("mouseout", function(){d3.select(this).style("background-color", "white")})
+
+                    // select tds and append new for each row of data split, and color with the scale
+                    .selectAll("td")
+                    .data(function(d) { return d; })
+                    .enter()
+                    .append("td")
+                    .attr("class","tableBody")
+                    .text(function(d) {
+                        return (d);
+                    })
+                    .style("background-color", function(d, i) {
+                        return color(d);
+                    })
+                    
+                    d3.select("tr")
+                    .attr("class","topRow")
+                    
+                    d3.select("tr")
+                    .selectAll("td")
+                    //.filter(":nth-child(odd)")
+                    .style("background-color","orange")
+                    
+                    d3.selectAll("td")
+                    .filter(":nth-child(odd)")
+                    .style("width","110px")
+            })
+            
+        </script>
+    </body>
+</html>

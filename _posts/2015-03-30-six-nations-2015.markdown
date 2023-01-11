@@ -12,13 +12,13 @@ As [Nate Silver](http://fivethirtyeight.com/features/rich-data-poor-data/) has p
 If I’ve done my job well the interactive charts below shouldn't need too much explaining, but I'll give a quick summary anyway. The top chart shows the changing title odds for each team over the last 6 weeks of the championship.  Hover over the square icons to see the championship table snapshot at different times, and click on one of the rugby balls to bring up an interactive visualization of in-match data for any one rugby match. The volumes relate to the number of matched bets on the sports exchange in a given time window.
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/6nations/vis.html" width="100%" height="780" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/6nations/vis.html" width="100%" height="780" frameBorder="0"> </iframe>
 </div>
 
 The most exciting day was of course the final one, so my second chart is a close-up of the madness for your viewing pleasure. Notice the nice flat pre-match odds descending into chaos after the first kick-off? That’s chart-speak for a really exciting day of rugby! It's clear from this how many people were backing Wales to win after the end of their match against Italy which finished at 2.20pm. By that point they had built up a big lead in terms of their points difference over England and Ireland. Then as Ireland moved more ahead of Scotland in the second half of the Ireland vs. Scotland match, the Welsh title chances diminished and finally disappeared. In the final match (England vs. France), you can see how the championship odds spiked every time either England or France scored a try.
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/6nationsfinal/vis.html" width="100%" height="780" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/6nationsfinal/vis.html" width="100%" height="780" frameBorder="0"> </iframe>
 </div>
 
 There's also a few other cool things that jump out to me:

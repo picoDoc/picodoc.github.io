@@ -1,0 +1,9 @@
+name,color,logoSize,logox,logoy,eventsx,y2scale
+Con-Majority,#11427B,80,2015-05-08 09:30:00.000,0.50,25,1.0
+Con-Lib-Dem-Coalition,#587BA3,50,2015-05-07 20:00:00.000,0.20,0,1.0
+Con-UKIP-Coalition,#88A0BD,190,2015-05-07 00:10:00.000,0.28,25,1.0
+Con-Minority,#CFD9E5,110,2015-05-07 13:00:00.000,0.25,0,1.0
+Lab-Majority,#EE2622,190,2015-05-07 00:10:00.000,0.28,25,1.0
+Lab-Lib-Dem-Coalition,#F36764,30,2015-05-07 20:00:00.000,0.53,0,1.0
+Lab-Minority,#FABEBD,80,2015-05-07 13:00:00.000,0.73,25,1.0
+Any-Other-Government-Coalition,gray,100,2015-05-07 02:00:00.000,0.70,0,1.0

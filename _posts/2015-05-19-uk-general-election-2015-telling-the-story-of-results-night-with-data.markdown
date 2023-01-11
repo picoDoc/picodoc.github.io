@@ -10,11 +10,11 @@ If you have been keeping abreast of the UK news recently, you may have heard tha
 One of the most interesting and active markets over the course of the day was the make-up of the next government of the UK; where possible outcomes included Conservative majority, Conservative minority, Conservative-Liberal Democrat coalition etc.  We've plotted this data in shades of red and blue for the two major parties, alongside a full timeline of the seats won by each party over the course of the night and the change since the 2010 election.  Seats won and changed for Labour, the Conservatives, the Liberal Democrats and the SNP and indicated in red, blue, orange and yellow receptively.  The second plot shows a full table of when each constituency was declared and the result, for those of you interested in digging a little deeper!
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/election/plot.html" width="100%" height="600" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/election/plot.html" width="100%" height="600" frameBorder="0"> </iframe>
 </div>
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/election/table.html" width="100%" height="200" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/election/table.html" width="100%" height="200" frameBorder="0"> </iframe>
 </div>
 
 Looking at the chart above we can see how the implied probability of the various outcomes changes throughout the day.  The polls were open from 07:00 to 22:00, UK broadcasters are required by Ofcom (UK communications regulator) to not discuss or analyse any issues/candidates and not publish the results of any polls.  This to ensure impartiality of election coverage and it is reflected in the chart above, there is no significant change in the chances of any of the outcomes throughout this period.

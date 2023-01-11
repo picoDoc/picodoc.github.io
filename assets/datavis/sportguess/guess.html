@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+	font: 11px sans-serif;
+}
+
+.title {
+	font: 18px sans-serif;
+	font-weight: bold;
+	text-anchor: middle;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: black;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.axis-label {
+	text-anchor: middle;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.svg-tooltip p {
+	font: 10px sans-serif;
+	font-weight: normal;
+}
+
+.svg-tooltip h3 {
+	font: 12px sans-serif;
+	font-weight: bold;
+}
+
+.eventsline {
+	stroke: #000;
+	stroke-width: 1;
+}
+
+.events {
+	stroke: black;
+	stroke-width: 2;
+}
+
+a.text {
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+</style>
+
+<body>
+
+	<script src="https://d3js.org/d3.v3.js"></script>
+	
+	<script>
+
+		var margin1 = {top: 40, right: 20, bottom: 0, left: 60},			// formatting & margins
+			width1 = 600 - margin1.left - margin1.right,
+			height1 = 220 - margin1.top - margin1.bottom,
+			eventsHeight = 60,
+			eventsMargin = 10,
+			eventsWidth = width1 - margin1.left - margin1.right,
+			margin2 = {top: 0, right: margin1.right, bottom: 60, left: margin1.left},
+			width2 = width1,
+			height2 = 220 - margin2.top - margin2.bottom;
+		
+		var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S.%L").parse,	// parsers for datetime
+			formatPercent = d3.format(".0%");							// and percentages
+
+		var x = d3.time.scale().range([0, width1]);
+
+		var y1 = d3.scale.linear().range([height1, 0]);
+		
+		var y2 = d3.scale.linear().range([height2, 0]);
+		
+		var y3 = d3.scale.linear().range([eventsHeight, 0]);
+
+		var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom")
+				.tickSize([5]);
+
+		var y1Axis = d3.svg.axis()
+				.scale(y1)
+				.orient("left")
+				.tickFormat(formatPercent)
+				.tickValues([0,0.2,0.4,0.6,0.8,1])
+				.tickSize([5]);
+		
+		var y2Axis = d3.svg.axis()
+				.scale(y2)
+				.tickSize([5]);
+				
+		var area0 = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y2(0); })
+				.y1(function(d) { return y2(0); });
+
+		var area1 = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y1(d.y0); })
+				.y1(function(d) { return y1(d.y0 + d.y); });
+				
+		var area2 = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y2(d.y0); })
+				.y1(function(d) { return y2(d.y0 + d.y); });
+
+		var stack = d3.layout.stack()
+				.values(function(d) { return d.values; });
+				
+		
+		// add the svg that holds everything
+		var svg = d3.select("body").append("svg")
+				.attr("width", width1 + margin1.left + margin1.right)
+				.attr("height", height1 + margin1.top + margin1.bottom + eventsHeight + (2*eventsMargin) + height2 + margin2.top + margin2.bottom);
+		
+		var names;
+		// grab list of events, and add a select dropdown box
+		d3.csv("data/eventNames.csv", function(error, eventNames) {
+		
+			names = eventNames;
+			
+			var eventIndices = d3.range(eventNames.length);
+			var eventIndex, eventSport, eventName, guesses = 0, correctGuesses = 0;
+			
+			var newEvent = function(){
+				eventIndex = eventIndices.splice(Math.floor( Math.random() * eventIndices.length ),1)[0];	
+				eventSport = eventNames[eventIndex].sport;
+				eventName = eventNames[eventIndex].title;
+			};
+			newEvent();
+			
+			var sports = [];	// empty list of sports			
+			eventNames.forEach(function(d){		// fill it up with distinct sports
+				for (var i = 0;i < sports.length;i++){
+					if(d.sport == sports[i]){return};
+				};
+				sports.push(d.sport);
+			});			
+			var guessSport = sports[0];  // what sport does the user think it is?
+			
+			var div = d3.select("body")
+				.append("div");
+				
+			// add some explanatory text
+			div.append("a")
+				.html("What sport is this?")
+				.attr("class","text");
+
+			// select box for sport
+			var select1 = div.append("select")
+				.on("change",function(){		// capture the users guess
+					guessSport = options1[0][select1.property('selectedIndex')].__data__;
+				});
+				
+			// populate the sport dropdown
+			var options1 = select1.selectAll("option")
+				.data(sports)
+				.enter()
+				.append("option")
+				.html(function(d){return d});
+				
+			var makeAGuess = function(){	// function to test the users guess when they click
+				guesses++;
+				if(guessSport === eventSport){
+					correctGuesses++;
+					message.html(eventSport + "! You've got " + correctGuesses + " out of " + guesses + " correct.")
+						.style("color","green");
+				}
+				else{
+					message.html(eventSport + "! You've got " + correctGuesses + " out of " + guesses + " correct.")
+						.style("color","red");
+				};
+				
+				// if the user has tried 5 times, that's enough
+				if(guesses === 5){
+					message.html(correctGuesses + " out of " + guesses + " in total. Not bad.");
+					drawPlots(true);
+					button.on("click",function(){});
+					return;
+				};
+				
+				drawPlots(true);
+				button
+					.html("next event")
+					.on("click",nextSport);
+			}
+			
+			var nextSport = function(){	// function to show the next event when the user is done
+				newEvent();
+				drawPlots(false);
+				button
+					.html("guess")
+					.on("click",makeAGuess);
+				message.html("");
+			}
+				
+			var button = div.append("button")	// create the guess button
+				.html("guess")
+				.on("click",makeAGuess);			
+			
+			var message = div
+				.append("a")	// add an element for messages
+				.attr("class","text")
+				.style("font-weight","bold");
+				
+			var plot1, plot2, plot3, plot4;
+		
+		// main function that draws the current eventName
+		var drawPlots = function(showEvents){
+		
+			// grab the config file first (all the plots might need this stuff), then load up all the other csv files
+			d3.csv("data/" + eventName + "/config.csv", function(error, config) {
+			d3.csv("data/" + eventName + "/odds.csv", function(error, odds) {
+			d3.csv("data/" + eventName + "/volume.csv", function(error, volume) {
+			d3.csv("data/" + eventName + "/events.csv", function(error, events) {
+			d3.csv("data/" + eventName + "/score.csv", function(error, score) {	
+		
+				/////////////////////////////////////////////////////////////
+				// If showEvents is true, just add those to existing graph //
+				/////////////////////////////////////////////////////////////
+			
+				if(showEvents){
+				
+					// add a title
+					plot1.append("text")
+						.attr("class","title")
+						.attr("transform","translate(" + (width1/2) + "," + -(margin1.top/2) + ")")
+						.text(eventName);
+			
+					//////////////////////////////////
+					//     Make the score chart     //
+					//////////////////////////////////
+					
+					// what are the two team columns?
+					var columns = Object.keys(score[0]);		// get column names
+					columns.shift();							// and remove date
+					
+					// Coerce types for non-time columns and parse dates
+					score.forEach(function(score) {
+						score.date = parseDate(score.date);
+						columns.forEach(function(column) {
+							score[column] = +score[column];
+						});
+					});
+					
+					// add a dummy final score
+					score[score.length] = {};
+					Object.keys(score[0]).forEach(function(column){
+						score[score.length - 1][column] = score[score.length - 2][column];
+					});
+					score[score.length - 1].date = x.domain()[1];
+					
+					// add offset width and height to array
+					for (var i = 0, n = score.length-1; i < n; i++) {	
+						score[i].offset = x(score[i].date);
+						score[i].width = x(score[i+1].date) - x(score[i].date);
+						score[i].height = score[i][columns[1]] - score[i][columns[0]];
+					};
+					
+					score.pop()  // drop the dummy score
+					
+					y3.domain([
+						-1*d3.max(score.map(function(d) { return Math.abs(d.height) })),
+						d3.max(score.map(function(d) { return Math.abs(d.height) }))
+					]);
+					
+					// set up the bar colors
+					scoreColors = [];
+					config.forEach(function(config){
+						if( config.name == columns[0]){ scoreColors[0] = config.color };
+						if( config.name == columns[1]){ scoreColors[1] = config.color };
+					});
+					
+					// g's to hold everything
+					var scoresPlot = plot3.selectAll("g")
+					.data(score).enter().append("g")
+						.attr("class","scores");
+						
+					// add the score highlighting boxes
+					scoresPlot.append("rect")
+						.attr("height",height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2)
+						.attr("width",function(d){return d.width })
+						.attr("x",function(d){return d.offset })
+						.attr("opacity",0);
+					
+					// plot the score and add mouseovers
+					scoresPlot.append("rect")
+						.attr("x", function(d) { return d.offset })
+						.attr("width", function(d) { return d.width })
+						.attr("y", function(d) {
+							if(d.height < 0){ return height1 + margin1.bottom + eventsMargin + y3(0) };
+							return height1 + margin1.bottom + eventsMargin + y3(d.height);
+						})
+						.attr("height", function(d) { return y3(0) - y3(Math.abs(d.height)) })
+						.attr("fill", function(d) {
+							if( d.height > 0 ){ return scoreColors[1] };
+							return scoreColors[0];
+						})
+						.attr("opacity",0)
+						
+						// on mouseover
+						.on("mouseover",function(d){
+							
+							// make line visible
+							d3.select(this.parentNode).select("rect")
+								.transition()
+								.duration(800)
+								.attr("opacity",0.15);					
+								
+							var currentScore = columns[1] + " " + d[columns[1]] + " - " + d[columns[0]] + " " + columns[0];
+							// add a tooltip with the score
+							tooltip = plot3.append("foreignObject")
+								.attr("class","svg-tooltip")
+								.attr("x",config[0].eventsx)
+								.attr("y",10 + height1 + margin1.bottom + eventsHeight + (2*eventsMargin))
+								.attr("width", 200)
+								.attr("height", 200).append("xhtml:div");																	
+							tooltip.append("h3")
+								.html(function(d){
+									return currentScore;
+								});
+							
+						})
+						.on("mouseout",function(d){
+						
+							// make line invisible again
+							d3.select(this.parentNode).select("rect")
+								.transition()
+								.duration(800)
+								.attr("opacity",0);
+								
+							// remove tooltip
+							svg.selectAll(".svg-tooltip").remove();
+							
+						})
+						.transition()
+						.delay(500)
+						.duration(1000)
+						.attr("opacity",1);
+					
+					// add an axis label
+					plot3.append("text")
+						.attr("class","axis-label")
+						.attr("transform", "translate(-" + 3*margin1.left/4 + "," + (height1 + margin1.bottom + eventsMargin + eventsHeight/2) + ")rotate(-90)")
+						.text("Score");
+						
+					
+					///////////////////////////
+					// Make the events panel //
+					///////////////////////////
+						
+					events.forEach(function(d) {
+						d.date = parseDate(d.date);
+						d.end = parseDate(d.end);
+					});
+					
+					// add g's to hold everything
+					var eventsPlot = plot4.selectAll("g")
+					.data(events).enter().append("g")
+						.attr("class","events");
+						
+					// add the event lines
+					eventsPlot.append("rect")
+						.attr("height",height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2)
+						.attr("width",function(d){return 0.1 + x(d.end) - x(d.date)})
+						.attr("x",function(d){return x(d.date)})
+						.attr("opacity",0);
+					
+					// add the event circles
+					eventsPlot.append("circle")
+						.attr("r",5)
+						.attr("cy",height1 + margin1.bottom + eventsMargin + eventsHeight/2)
+						.attr("cx", function(d){return x(d.date)})
+						.attr("fill", function(d){return d.fill})
+						.attr("opacity",0)
+						.attr("stroke-width",1.5)
+						
+						// on mouseover
+						.on("mouseover",function(d){
+						
+							// make line visible
+							d3.select(this.parentNode).select("rect")
+								.transition()
+								.duration(800)
+								.attr("opacity",0.3);
+								
+							// bubble up the circle
+							d3.select(this)
+								.transition()
+								.duration(800)
+								.attr("r",10)
+								.ease("elastic");
+								
+							// and add the tooltip
+							tooltip = d3.select(this.parentNode).append("foreignObject")
+								.attr("class","svg-tooltip")
+								.attr("x",config[0].eventsx)
+								.attr("y",10 + height1 + margin1.bottom + eventsHeight + (2*eventsMargin))
+								.attr("width", 200)
+								.attr("height", 200).append("xhtml:div");																	
+							tooltip.append("h3")
+								.html(function(d){return d.title});
+							tooltip.append("p")
+								.html(function(d){return d.description});
+						})
+						
+						//on mouseout
+						.on("mouseout",function(d){
+						
+							// make line invisible again
+							d3.select(this.parentNode).select("rect")
+								.transition()
+								.duration(800)
+								.attr("opacity",0);
+							
+							// bubble circle back to normal size
+							d3.select(this)
+								.transition()
+								.duration(800)
+								.attr("r",5)
+								.ease("elastic");
+							
+							// remove previous tooltip
+							svg.selectAll(".svg-tooltip").remove();
+						})
+						
+						.transition()
+						.delay(500)
+						.duration(1000)
+						.attr("opacity",1);
+						
+						svg.selectAll("image")
+							.transition()
+							.delay(500)
+							.duration(1000)
+							.attr("opacity",1);
+					
+					// return early to avoid redrawing everything
+					return;
+					
+				};
+					
+			
+				/////////////////////////////////////////////////
+				// If showEvents isn't true, rebuild the chart //
+				/////////////////////////////////////////////////			
+						
+				// remove old plot
+				svg.selectAll("g").remove();
+				
+				// add a g to hold the first plot (odds)
+				plot1 = svg.append("g")
+						.attr("transform", "translate(" + margin1.left + "," + margin1.top + ")");
+				
+				// add a g to hold the score plot
+				plot3 = svg.append("g")
+						.attr("transform", "translate(" + margin1.left + "," + margin1.top + ")");
+						
+				// add a g to hold the events plot
+				plot4 = svg.append("g")
+						.attr("transform", "translate(" + margin1.left + "," + margin1.top + ")");
+						
+				// add a g to hold the second plot (volume traded)
+				plot2 = svg.append("g")
+						.attr("transform", "translate(" + margin1.left + "," + (margin1.top + height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top) + ")");
+				
+				// make them all invisible so we can fade in later
+				svg.selectAll("g")
+					.attr("opacity",0);			
+
+			
+				//////////////////////////////////////////
+				// Make the implied probabilities graph //
+				//////////////////////////////////////////
+				
+				odds.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+
+				var oddsPlots = stack(config.map(function(config) {		// make a map combining config and data, then stack will add y0 for stacking
+					config.values = odds.map(function(d) {return {date: d.date, y: d[config.name] / 100}});
+					return config;
+				}));
+					
+				x.domain(d3.extent(odds, function(d) { return d.date; }));		// let the x scale know it's extents, same axis then used for all 3 plots
+
+				var oddsPlot = plot1.selectAll(".oddsPlot")		// append a g for each data series
+						.data(oddsPlots)
+					.enter().append("g")
+						.attr("class", "oddsPlot");
+
+				oddsPlot.append("path")		// and add a path to each g (these will be the actual plots)
+					.attr("class", "area")
+					.attr("d", function(d) { return area1(d.values); })		// area converts data into a coords for the path 
+					.style("fill", function(d) { return d.color;});			// fill with chosen colors
+							
+				plot1.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height1 + ")")
+					.call(xAxis)
+				.selectAll("text")
+					.attr("visibility","hidden");
+
+				plot1.append("g")
+					.attr("class", "y axis")
+					.call(y1Axis.orient("left"));
+						
+				plot1.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width1 + ",0)")
+					.call(y1Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot1.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 3*margin1.left/4 + "," + height1/2 + ")rotate(-90)")
+					.text("Implied probability");
+				
+				oddsPlot.append("svg:image")		// draw the logos now, but fade in later
+					.datum(function(d) {return d})
+					.attr("xlink:href", function(d){return "data/" + eventName + "/" + d.name + ".svg"} )
+					.attr("y",function(d){return y1(d.logoy) - d.logoSize/2})
+					.attr("x",function(d){return x(parseDate(d.logox)) - d.logoSize/2})
+					.attr("width",function(d){return d.logoSize})
+					.attr("height",function(d){return d.logoSize})
+					.attr("opacity",0)
+				
+					
+				//////////////////////////////////
+				// Make the volume traded graph //
+				//////////////////////////////////
+				
+				volume.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+
+				var volPlots = stack(config.map(function(config) {		// make a map combining config and data, then stack will add y0 for stacking
+					config.values = volume.map(function(d) {return {date: d.date, y: d[config.name] / 100}});
+					return config;
+				}));
+				
+				y2.domain([0,(config[0].y2scale)*d3.max(volPlots[volPlots.length-1].values.map(function(d){return d.y + d.y0}))]);		// same for y
+
+				var volPlot = plot2.selectAll(".volPlot")		// append a g for each data series
+						.data(volPlots)
+					.enter().append("g")
+						.attr("class", "volPlot");
+						
+				volPlot.append("path")		// and add a path to each g (these will be the actual plots)
+					.attr("class", "area")
+					.attr("d", function(d) { return area0(d.values); })		// area converts data into a coords for the path 
+					.style("fill", function(d) { return d.color;})		// fill with chosen colors
+					.transition()
+					.delay(1000)
+					.duration(1000)
+					.ease("elastic")
+					.attr("d", function(d) { return area2(d.values); });
+					
+				plot2.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height2 + ")")
+					.call(xAxis);
+
+				plot2.append("g")
+					.attr("class", "y axis")
+					.call(y2Axis.orient("left"));
+						
+				plot2.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width2 + ",0)")
+					.call(y2Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot2.append("text")
+					.attr("class","axis-label")
+					.attr("transform","translate(" + width2/2 + "," + (height2 + margin2.bottom/1.5) + ")")
+					.text("Time");
+					
+				plot2.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 3*margin2.left/4 + "," + height2/2 + ")rotate(-90)")
+					.text("Volume per minute");
+			
+				
+				// append some lines to tidy up the look, divide charts
+				plot3.append("rect")
+					.attr("class","eventsline")
+					.attr("y",height1)
+					.attr("width",width1)
+					.attr("height",eventsHeight + (2*eventsMargin) )
+					.attr("fill-opacity",0);
+				plot3.append("rect")
+					.attr("class","eventsline")
+					.attr("y",height1 + (eventsHeight/2) + (eventsMargin))
+					.attr("width",width1)
+					.attr("height",0.0001 )
+					.attr("fill-opacity",0);
+					
+				
+				// fade everything in
+				svg.selectAll("g")
+					.transition()
+					.duration(1000)
+					.attr("opacity",1);
+					
+				
+					
+					
+			})})})})});
+			
+		};
+		
+		// draw the initial plot
+		drawPlots(false);
+			
+		});
+
+	</script>
+	
+</body>

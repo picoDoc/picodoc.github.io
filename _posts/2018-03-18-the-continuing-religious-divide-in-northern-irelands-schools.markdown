@@ -10,7 +10,7 @@ Over 5 years ago Kathryn Torney published an [>analysis of the religious divide 
 I've combined the data used in Kathryn's original article and more recent data for 2017 made available on [OpenDataNI](https://www.opendatani.gov.uk/) to illustrate the depth of the divide that still exists in education here in Northern Ireland.  The chart below is fully interactive: data can be viewed for one of three points in time, and filtered by management type, school type, age, and school make-up (try clicking anywhere, or dragging across the main chart)
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/nieducation/index.html" width="100%" height="470" frameBorder="0"> </iframe>
+<iframe src="/assets/nieducation/index.html" width="100%" height="470" frameBorder="0"> </iframe>
 </div>
 
 I don't think it's a exaggeration to say this is the most serious manifestation of the divide in Northern Irish society.  In Kathryn's original guardian article she quoted Peter Robinson describing the education system in Northern Ireland as a "benign form of apartheid which is fundamentally damaging to our society."  Obviously the reasons for this have a long and complex history, however I think it's important to acknowledge just how dramatic the divide is.  I won't dwell on any particular aspect of the data, as hopefully it speaks for itself.

@@ -11,7 +11,7 @@ So last week I was sitting in the comfort of my living room, watching Ireland sn
 In the last post I showed exactly this kind of data based visual match report for Superbowl XLIX using live gambling data from a sports exchange.  Sport exchanges are very similar to financial markets, with the fluctuating odds being directly analogous to stock prices or foreign exchange rates.  In theory they should both rise and fall in response to real world events.  So, let's have a look at some financial data...
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/financedata/chart.html" width="200%" height="270" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/financedata/chart.html" width="200%" height="270" frameBorder="0"> </iframe>
 </div>
 
 So, one of these lines is a large technology stock, while the other is an foreign exchange rate.  Can you tell them apart?  I sure as hell can't.  Maybe try looking at news for 4th March 2015 and see if that helps?  Honestly I'd still be very impressed if you could tell the difference.   The blue line is the EUR-USD exchange rate, while in red is the price of AAPL stocks trading on the NASDAQ.  The jumps up and down in price might be related to real-world events - or they might not - either way it's pretty clear you could never look at just this graph and figure out which is which from the price movements alone.
@@ -32,7 +32,7 @@ Let's play a game.  Can you guess which sport the graph below belongs to?  I'll 
 Have at it...
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/datavis/sportguess/guess.html" width="100%" height="570" frameBorder="0"> </iframe>
+<iframe src="/assets/datavis/sportguess/guess.html" width="100%" height="570" frameBorder="0"> </iframe>
 </div>
 
 So, how did you do?  See any interesting patterns or differences between different sports?

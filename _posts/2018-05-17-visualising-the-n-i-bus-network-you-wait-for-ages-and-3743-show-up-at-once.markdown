@@ -9,7 +9,7 @@ permalink: "/visualising-the-n-i-bus-network-you-wait-for-ages-and-3743-show-up-
 Translink recently made available their set of Ulsterbus, Goldline and Metro timetables and routes on [Open Data NI](https://www.opendatani.gov.uk/organization/translink). We combined these data sets to find the expected position of each bus in the dataset at one minute intervals throughout the 3,743 valid timetabled routes listed.
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/buses/index.html" width="100%" height="550" frameBorder="0"> </iframe>
+<iframe src="/assets/buses/index.html" width="100%" height="550" frameBorder="0"> </iframe>
 </div>
 
 Here, blue dots are Ulsterbus/Goldline services, and the remaining dots are the various Metro routes in Belfast.

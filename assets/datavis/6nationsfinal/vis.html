@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+	font: 11px sans-serif;
+}
+
+.title {
+	font: 18px sans-serif;
+	font-weight: bold;
+	text-anchor: middle;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: black;
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.axis-label {
+	text-anchor: middle;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.svg-tooltip p {
+	font: 10px sans-serif;
+	font-weight: normal;
+}
+
+.svg-tooltip h3 {
+	font: 12px sans-serif;
+	font-weight: bold;
+}
+
+.eventsline {
+	stroke: #000;
+	stroke-width: 1;
+}
+
+.matchHighlight {
+	stroke: #000;
+	stoke-width: 1;
+	fill-opacity: 0;
+}
+
+.events {
+	stroke: #000;
+	stroke-width: 1;
+}
+
+</style>
+
+<body>
+
+	<script src="https://d3js.org/d3.v3.js"></script>
+	
+	<script>
+
+		var margin0 = {top: 40, right: 20, bottom: 90, left: 60},			// formatting & margins
+			width0 = 600 - margin0.left - margin0.right,
+			height0 = 300 - margin0.top - margin0.bottom,
+			margin1 = {top: 60, right: 40, bottom: 0, left: 140},
+			width1 = 600 - margin1.left - margin1.right,
+			height1 = 190 - margin1.top - margin1.bottom,
+			eventsHeight = 50,
+			eventsMargin = 10,
+			eventsWidth = width1 - margin1.left - margin1.right,
+			margin2 = {top: 0, right: margin1.right, bottom: 60, left: margin1.left},
+			width2 = width1,
+			height2 = 190 - margin2.top - margin2.bottom;
+		
+		var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S.%L").parse,	// parsers for datetime
+			formatPercent = d3.format(".0%");							// and percentages
+
+		var x0 = d3.time.scale().range([0, width0]);	
+		
+		var x = d3.time.scale().range([0, width1]);
+		
+		var y0 = d3.scale.linear().range([height0, 0]);
+
+		var y1 = d3.scale.linear().range([height1, 0]);
+		
+		var y2 = d3.scale.linear().range([height2, 0]);
+		
+		var y3 = d3.scale.linear().range([eventsHeight, 0]);
+
+		var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom")
+				.tickSize([5]);
+				
+		var x0Axis = d3.svg.axis()
+				.scale(x0)
+				.orient("bottom")
+				.ticks(6)
+				.tickSize([5]);
+
+		var y0Axis = d3.svg.axis()
+				.scale(y0)
+				.orient("left")
+				.tickFormat(formatPercent)
+				.tickValues([0,0.2,0.4,0.6,0.8,1])
+				.tickSize([5]);
+				
+		var y1Axis = d3.svg.axis()
+				.scale(y1)
+				.orient("left")
+				.tickFormat(formatPercent)
+				.tickValues([0,0.2,0.4,0.6,0.8,1])
+				.tickSize([5]);
+		
+		var y2Axis = d3.svg.axis()
+				.scale(y2)
+				.tickSize([5]);
+				
+		var areaNull = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y2(0); })
+				.y1(function(d) { return y2(0); });
+				
+		var area0 = d3.svg.area()
+				.x(function(d) { return x0(d.date); })
+				.y0(function(d) { return y0(d.y0); })
+				.y1(function(d) { return y0(d.y0 + d.y); });
+
+		var area1 = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y1(d.y0); })
+				.y1(function(d) { return y1(d.y0 + d.y); });
+				
+		var area2 = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y2(d.y0); })
+				.y1(function(d) { return y2(d.y0 + d.y); });
+
+		var stack = d3.layout.stack()
+				.values(function(d) { return d.values; });
+				
+		
+		// add the svg that holds everything
+		var svg = d3.select("body").append("svg")
+				.attr("width", width1 + margin1.left + margin1.right)
+				.attr("height", height0 + margin0.top + margin0.bottom + height1 + margin1.top + margin1.bottom + eventsHeight + (2*eventsMargin) + height2 + margin2.top + margin2.bottom);
+		
+		// and 2 groups that hold the overall title odds plot and the individual matches
+		var overallPlot = svg.append("g");
+		var matchPlot = svg.append("g");
+		
+		// emphasis outline for live match odds
+		matchPlot.append("rect")
+					.attr("class","matchHighlight")
+					.attr("stroke-width",2)
+					.attr("x",margin0.left)
+					.attr("y",margin0.top + height0 + margin0.bottom)
+					.attr("width",width0)
+					.attr("height",margin1.top + height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2 + margin2.bottom - 5);
+	
+		
+		// grab list of events before everything else 
+		d3.csv("data/eventNames.csv", function(error, eventNames) {
+		
+		
+		// initial match to be drawn
+		var eventName = eventNames[0].title;		
+		
+		
+		// main function to draw the overall title odds
+		var drawOverallPlot = function(){
+		
+			// add a g to hold the plot
+			var plot0 = overallPlot.append("g")
+					.attr("transform", "translate(" + margin0.left + "," + margin0.top + ")");
+			// the circles for individual matches		
+			var plot1 = overallPlot.append("g")
+					.attr("transform", "translate(" + margin0.left + "," + margin0.top + ")");
+			// and the rects for current standing tables		
+			var plot2  = overallPlot.append("g")
+					.attr("transform", "translate(" + margin0.left + "," + margin0.top + ")");
+			
+			// grab data
+			d3.csv("data/config.csv", function(error, config) {
+			d3.csv("data/odds.csv", function(error, odds) {
+			d3.csv("data/tables.csv",function(error,tables) {
+			
+				
+				//////////////////////////////////////////
+				// Make the implied probabilities graph //
+				//////////////////////////////////////////
+				
+				odds.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+
+				var oddsPlots = stack(config.map(function(config) {		// make a map combining config and data, then stack will add y0 for stacking
+					config.values = odds.map(function(d) {return {date: d.date, y: d[config.name] / 100}});
+					return config;
+				}));
+				
+				x0.domain(d3.extent(odds, function(d) { return d.date; }));		// let the x scale know it's extents, same axis then used for all 3 plots
+
+				var oddsPlot = plot0.selectAll(".oddsPlot")		// append a g for each data series
+						.data(oddsPlots)
+					.enter().append("g")
+						.attr("class", "oddsPlot");
+
+				oddsPlot.append("path")		// and add a path to each g (these will be the actual plots)
+					.attr("class", "area0")
+					.attr("d", function(d) { return area0(d.values); })		// area converts data into a coords for the path 
+					.style("fill", function(d) { return d.color;});			// fill with chosen colors
+							
+				plot0.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height0 + ")")
+					.call(x0Axis)
+
+				plot0.append("g")
+					.attr("class", "y axis")
+					.call(y0Axis.orient("left"));
+						
+				plot0.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width0 + ",0)")
+					.call(y0Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot0.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 3*margin0.left/4 + "," + height0/2 + ")rotate(-90)")
+					.text("Overall win");
+								
+				oddsPlot.append("svg:image")
+					.datum(function(d) {return d})
+					.attr("xlink:href", function(d){return "https://www.picodoc.org/wp-content/uploads/datavis/6nationsfinal/data/" + d.name + ".svg"} )
+					.attr("y",function(d){return y0(d.logoy) - d.logoSize/2})
+					.attr("x",function(d){return x0(parseDate(d.logox)) - d.logoSize/2})
+					.attr("width",function(d){return d.logoSize})
+					.attr("height",function(d){return d.logoSize})
+					.attr("opacity",0)
+					.transition()
+					.delay(1000)
+					.duration(1000)
+					.attr("opacity",1);
+				
+				
+				/////////////////////////////////////////////
+				// Add in the event bubbles for each match //
+				/////////////////////////////////////////////
+				
+				eventNames.forEach(function(d) {
+					d.start = parseDate(d.start);
+					d.end = parseDate(d.end);
+				});
+				
+				// add g's to hold everything
+				var eventsPlot = plot1.selectAll("g")
+				.data(eventNames).enter().append("g")
+					.attr("class","events");
+					
+				// add the event lines
+				eventsPlot.append("rect")
+					.attr("height",height0)
+					.attr("width",function(d){return 0.1 + x0(d.end) - x0(d.start)})
+					.attr("x",function(d){return x0(d.start)})
+					.attr("opacity",0);
+				
+				// add the event circles
+				eventsPlot.append("ellipse")
+					.attr("rx",6)
+					.attr("ry",9)
+					.attr("cy",function(d){return y0(d.height)})
+					.attr("cx", function(d){return x0(d.start)})
+					.attr("fill", function(d){return d.fill})
+					.style("stroke",function(d){return d.stroke})
+					.attr("opacity",1)
+					.attr("stroke-width",2)
+					
+					// on mouseover
+					.on("mouseover",function(d){
+					
+						// make line visible
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0.3);
+							
+						// bubble up the circle
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("rx",8)
+							.attr("ry",12)
+							.ease("elastic");
+
+					})
+					
+					//on mouseout
+					.on("mouseout",function(d){
+					
+						// make line invisible again
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0);
+						
+						// bubble circle back to normal size
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("rx",6)
+							.attr("ry",9)
+							.ease("elastic");
+						
+					})
+
+					//on click
+					.on("click",function(d){
+						eventName = d.title;
+						drawPlots();						
+					});
+				
+				
+				/////////////////////////////////////////////
+				//            Add in the tables            //
+				/////////////////////////////////////////////
+				
+				tables.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+					
+				// add g's to hold everything
+				var tablesPlot = plot2.selectAll("g")
+				.data(tables).enter().append("g")
+					.attr("class","events");
+					
+				// add the tables
+				tablesPlot.append("svg:image")
+					.attr("xlink:href", function(d){return "https://www.picodoc.org/wp-content/uploads/datavis/6nationsfinal/data/" + d.file + ".png"} )
+					.attr("y",10)
+					.attr("x",10)
+					.attr("width", "210")
+					.attr("height", "115")
+					.attr("opacity",0)
+					
+				// add rects to select them
+				tablesPlot.append("rect")
+					.attr("x",function(d){return x0(d.date) - 8})
+					.attr("y",height0 + 43)
+					.attr("height",16)
+					.attr("width",16)
+					.attr("fill", "white")
+					.style("stroke","#000")
+					.attr("opacity",1)
+					.attr("stroke-width",2)					
+					
+					.on("mouseover",function(d){
+					
+						// make table visible
+						d3.select(this.parentNode).select("image")
+							.transition()
+							.duration(800)
+							.attr("opacity",1);
+							
+						// bubble up the rect
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("width",24)
+							.attr("height",24)
+							.attr("y",height0 + 39)
+							.attr("x", function(d){return x0(d.date) - 12})
+							.ease("elastic");
+
+					})
+					
+					//on mouseout
+					.on("mouseout",function(d){
+					
+						// make table invisible
+						d3.select(this.parentNode).select("image")
+							.transition()
+							.duration(800)
+							.attr("opacity",0);
+						
+						// bubble rect back to normal size
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("width",16)
+							.attr("height",16)
+							.attr("y",height0 + 43)
+							.attr("x", function(d){return x0(d.date) - 8})
+							.ease("elastic");
+						
+					})
+					
+			})})});
+		};
+		
+		
+		
+		
+		
+		// main function that draws the current eventName
+		var drawPlots = function(){
+		
+			// remove old plot (if there is one)
+			matchPlot.selectAll("g").remove();
+			
+			// add a g to hold the first plot (odds)
+			var plot1 = matchPlot.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + (margin0.top + height0 + margin0.bottom + margin1.top) + ")");
+			
+			// add a g to hold the score plot
+			var plot3 = matchPlot.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + (margin0.top + height0 + margin0.bottom + margin1.top) + ")");
+					
+			// add a g to hold the events plot
+			var plot4 = matchPlot.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + (margin0.top + height0 + margin0.bottom + margin1.top) + ")");
+					
+			// add a g to hold the second plot (volume traded)
+			var plot2 = matchPlot.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + (margin0.top + height0 + margin0.bottom + margin1.top + height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top) + ")");
+			
+			// make them all invisible so we can fade in later
+			matchPlot.selectAll("g")
+				.attr("opacity",0);			
+			
+			// grab the config file first (all the plots might need this stuff), then load up all the other csv files
+			d3.csv("data/" + eventName + "/config.csv", function(error, config) {
+			d3.csv("data/" + eventName + "/odds.csv", function(error, odds) {
+			d3.csv("data/" + eventName + "/volume.csv", function(error, volume) {
+			d3.csv("data/" + eventName + "/events.csv", function(error, events) {
+			d3.csv("data/" + eventName + "/score.csv", function(error, score) {	
+			
+				// add a title
+				plot1.append("text")
+					.attr("class","title")
+					.attr("transform","translate(" + (width1/2) + "," + -(margin1.top/2) + ")")
+					.text(eventName);
+						
+			
+				//////////////////////////////////////////
+				// Make the implied probabilities graph //
+				//////////////////////////////////////////
+				
+				odds.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+
+				var oddsPlots = stack(config.map(function(config) {		// make a map combining config and data, then stack will add y0 for stacking
+					config.values = odds.map(function(d) {return {date: d.date, y: d[config.name] / 100}});
+					return config;
+				}));
+					
+				x.domain(d3.extent(odds, function(d) { return d.date; }));		// let the x scale know it's extents, same axis then used for all 3 plots
+
+				var oddsPlot = plot1.selectAll(".oddsPlot")		// append a g for each data series
+						.data(oddsPlots)
+					.enter().append("g")
+						.attr("class", "oddsPlot");
+
+				oddsPlot.append("path")		// and add a path to each g (these will be the actual plots)
+					.attr("class", "area")
+					.attr("d", function(d) { return area1(d.values); })		// area converts data into a coords for the path 
+					.style("fill", function(d) { return d.color;});			// fill with chosen colors
+							
+				plot1.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height1 + ")")
+					.call(xAxis)
+				.selectAll("text")
+					.attr("visibility","hidden");
+
+				plot1.append("g")
+					.attr("class", "y axis")
+					.call(y1Axis.orient("left"));
+						
+				plot1.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width1 + ",0)")
+					.call(y1Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot1.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 50 + "," + height1/2 + ")rotate(-90)")
+					.text("Match win");
+								
+				oddsPlot.append("svg:image")
+					.datum(function(d) {return d})
+					.attr("xlink:href", function(d){return "https://www.picodoc.org/wp-content/uploads/datavis/6nationsfinal/data/" + eventName + "/" + d.name + ".svg"} )
+					.attr("y",function(d){return y1(d.logoy) - d.logoSize/2})
+					.attr("x",function(d){return x(parseDate(d.logox)) - d.logoSize/2})
+					.attr("width",function(d){return d.logoSize})
+					.attr("height",function(d){return d.logoSize})
+					.attr("opacity",0)
+					.transition()
+					.delay(1000)
+					.duration(1000)
+					.attr("opacity",1);
+					
+					
+				//////////////////////////////////
+				// Make the volume traded graph //
+				//////////////////////////////////
+				
+				volume.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+
+				var volPlots = stack(config.map(function(config) {		// make a map combining config and data, then stack will add y0 for stacking
+					config.values = volume.map(function(d) {return {date: d.date, y: d[config.name] / 100}});
+					return config;
+				}));
+				
+				y2.domain([0,(config[0].y2scale)*d3.max(volPlots[volPlots.length-1].values.map(function(d){return d.y + d.y0}))]);		// same for y
+
+				var volPlot = plot2.selectAll(".volPlot")		// append a g for each data series
+						.data(volPlots)
+					.enter().append("g")
+						.attr("class", "volPlot");
+						
+				volPlot.append("path")		// and add a path to each g (these will be the actual plots)
+					.attr("class", "area")
+					.attr("d", function(d) { return areaNull(d.values); })		// area converts data into a coords for the path 
+					.style("fill", function(d) { return d.color;})		// fill with chosen colors
+					.transition()
+					.delay(1000)
+					.duration(1000)
+					.ease("elastic")
+					.attr("d", function(d) { return area2(d.values); });
+				
+				plot2.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height2 + ")")
+					.call(xAxis);
+
+				plot2.append("g")
+					.attr("class", "y axis")
+					.call(y2Axis.orient("left"));
+						
+				plot2.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width2 + ",0)")
+					.call(y2Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot2.append("text")
+					.attr("class","axis-label")
+					.attr("transform","translate(" + width2/2 + "," + (height2 + margin2.bottom/1.5) + ")")
+					.text("Time");
+					
+				plot2.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 50 + "," + height2/2 + ")rotate(-90)")
+					.text("Volume per minute");
+				
+				
+				//////////////////////////////////
+				//     Make the score chart     //
+				//////////////////////////////////
+				
+				// append some lines to tidy up the look, divide charts
+				plot3.append("rect")
+					.attr("class","eventsline")
+					.attr("y",height1)
+					.attr("width",width1)
+					.attr("height",eventsHeight + (2*eventsMargin) )
+					.attr("fill-opacity",0);
+				plot3.append("rect")
+					.attr("class","eventsline")
+					.attr("y",height1 + (eventsHeight/2) + (eventsMargin))
+					.attr("width",width1)
+					.attr("height",0.0001 )
+					.attr("fill-opacity",0);
+				
+				// what are the two team columns?
+				var columns = Object.keys(score[0]);		// get column names
+				columns.shift();							// and remove date
+				
+				// Coerce types for non-time columns and parse dates
+				score.forEach(function(score) {
+					score.date = parseDate(score.date);
+					columns.forEach(function(column) {
+						score[column] = +score[column];
+					});
+				});
+				
+				// add a dummy final score
+				score[score.length] = {};
+				Object.keys(score[0]).forEach(function(column){
+					score[score.length - 1][column] = score[score.length - 2][column];
+				});
+				score[score.length - 1].date = x.domain()[1];
+				
+				// add offset width and height to array
+				for (var i = 0, n = score.length-1; i < n; i++) {	
+					score[i].offset = x(score[i].date);
+					score[i].width = x(score[i+1].date) - x(score[i].date);
+					score[i].height = score[i][columns[1]] - score[i][columns[0]];
+				};
+				
+				score.pop()  // drop the dummy score
+				
+				y3.domain([
+					-1*d3.max(score.map(function(d) { return Math.abs(d.height) })),
+					d3.max(score.map(function(d) { return Math.abs(d.height) }))
+				]);
+				
+				// set up the bar colors
+				scoreColors = [];
+				config.forEach(function(config){
+					if( config.name == columns[0]){ scoreColors[0] = config.color };
+					if( config.name == columns[1]){ scoreColors[1] = config.color };
+				});
+				
+				// g's to hold everything
+				var scoresPlot = plot3.selectAll("g")
+				.data(score).enter().append("g")
+					.attr("class","scores");
+					
+				// add the score highlighting boxes
+				scoresPlot.append("rect")
+					.attr("height",height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2)
+					.attr("width",function(d){return d.width })
+					.attr("x",function(d){return d.offset })
+					.attr("opacity",0);
+				
+				// plot the score and add mouseovers
+				scoresPlot.append("rect")
+					.attr("x", function(d) { return d.offset })
+					.attr("width", function(d) { return d.width })
+					.attr("y", function(d) {
+						if(d.height < 0){ return height1 + margin1.bottom + eventsMargin + y3(0) };
+						return height1 + margin1.bottom + eventsMargin + y3(d.height);
+					})
+					.attr("height", function(d) { return y3(0) - y3(Math.abs(d.height)) })
+					.attr("fill", function(d) {
+						if( d.height > 0 ){ return scoreColors[1] };
+						return scoreColors[0];
+					})
+					
+					// on mouseover
+					.on("mouseover",function(d){
+						
+						// make line visible
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0.15);					
+							
+						var currentScore = columns[1] + " " + d[columns[1]] + " - " + d[columns[0]] + " " + columns[0];
+						// add a tooltip with the score
+						tooltip = plot3.append("foreignObject")
+							.attr("class","svg-tooltip")
+							.attr("x",config[0].eventsx)
+							.attr("y",10 + height1 + margin1.bottom + eventsHeight + (2*eventsMargin))
+							.attr("width", 200)
+							.attr("height", 200).append("xhtml:div");																	
+						tooltip.append("h3")
+							.html(function(d){
+								return currentScore;
+							});
+						
+					})
+					.on("mouseout",function(d){
+					
+						// make line invisible again
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0);
+							
+						// remove tooltip
+						matchPlot.selectAll(".svg-tooltip").remove();
+						
+					});
+				
+				// add an axis label
+				plot3.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 50 + "," + (height1 + margin1.bottom + eventsMargin + eventsHeight/2) + ")rotate(-90)")
+					.text("Score");
+					
+				
+				///////////////////////////
+				// Make the events panel //
+				///////////////////////////
+					
+				events.forEach(function(d) {
+					d.date = parseDate(d.date);
+					d.end = parseDate(d.end);
+				});
+				
+				// add g's to hold everything
+				var eventsPlot = plot4.selectAll("g")
+				.data(events).enter().append("g")
+					.attr("class","events");
+					
+				// add the event lines
+				eventsPlot.append("rect")
+					.attr("height",height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2)
+					.attr("width",function(d){return 0.1 + x(d.end) - x(d.date)})
+					.attr("x",function(d){return x(d.date)})
+					.attr("opacity",0);
+				
+				// add the event circles
+				eventsPlot.append("circle")
+					.attr("r",5)
+					.attr("cy",height1 + margin1.bottom + eventsMargin + eventsHeight/2)
+					.attr("cx", function(d){return x(d.date)})
+					.attr("fill", function(d){return d.fill})
+					.attr("opacity",0)
+					.attr("stroke-width",1.5)
+					
+					// on mouseover
+					.on("mouseover",function(d){
+					
+						// make line visible
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0.3);
+							
+						// bubble up the circle
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("r",10)
+							.ease("elastic");
+							
+						// and add the tooltip
+						tooltip = d3.select(this.parentNode).append("foreignObject")
+							.attr("class","svg-tooltip")
+							.attr("x",config[0].eventsx)
+							.attr("y",10 + height1 + margin1.bottom + eventsHeight + (2*eventsMargin))
+							.attr("width", 200)
+							.attr("height", 200).append("xhtml:div");																	
+						tooltip.append("h3")
+							.html(function(d){return d.title});
+						tooltip.append("p")
+							.html(function(d){return d.description});
+					})
+					
+					//on mouseout
+					.on("mouseout",function(d){
+					
+						// make line invisible again
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0);
+						
+						// bubble circle back to normal size
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("r",5)
+							.ease("elastic");
+						
+						// remove previous tooltip
+						matchPlot.selectAll(".svg-tooltip").remove();
+					})
+					
+					.transition()
+					.delay(2000)
+					.duration(1000)
+					.attr("opacity",1)
+				
+				
+				// fade everything in
+				matchPlot.selectAll("g")
+					.transition()
+					.duration(1000)
+					.attr("opacity",1);
+					
+					
+			})})})})});
+			
+		};
+		
+		// draw the overall title odds and all the selectors initally
+		drawOverallPlot();
+		drawPlots();
+			
+		});
+
+	</script>
+	
+</body>

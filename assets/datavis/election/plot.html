@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+	font: 12px sans-serif;
+}
+
+.title {
+	font: 20px sans-serif;
+	font-weight: bold;
+	text-anchor: middle;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #404040;
+  stroke-width: 2;
+  shape-rendering: crispEdges;
+}
+.axis-label {
+	text-anchor: middle;
+	font-weight: 600;
+	font-size: 16px;
+}
+.plot-label {
+	text-anchor: middle;
+	font-weight: bolder;
+	font-size: 10px;
+}
+.line {
+	fill: none;
+	stroke-width: 2.0px;
+}
+
+.svg-tooltip p {
+	font: 11px sans-serif;
+	font-weight: normal;
+}
+
+.svg-tooltip h3 {
+	font: 12px sans-serif;
+	font-weight: bold;
+}
+
+.eventsline {
+	stroke: #404040;
+	stroke-width: 2;
+}
+
+.events {
+	stroke: #000;
+	stroke-width: 2;
+}
+
+select {	
+	font-weight: bold;
+}
+</style>
+
+<body>
+
+	<script src="https://d3js.org/d3.v3.js"></script>
+	
+	<script>
+
+		var margin1 = {top: 50, right: 20, bottom: 0, left: 80},			// formatting & margins
+			width1 = 680 - margin1.left - margin1.right,
+			height1 = 280 - margin1.top - margin1.bottom,
+			eventsHeight = 0,
+			eventsMargin = 0,
+			eventsWidth = width1 - margin1.left - margin1.right,
+			margin2 = {top: 0, right: margin1.right, bottom: 0, left: margin1.left},
+			width2 = width1,
+			height2 = 120 - margin2.top - margin2.bottom;
+			margin3 = {top: 0, right: margin1.right, bottom: 60, left: margin1.left},
+			width3 = width1,
+			height3 = 180 - margin3.top - margin3.bottom;
+			
+		
+		var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S.%L").parse,	// parsers for datetime
+			formatPercent = d3.format(".0%");							// and percentages
+
+		var x = d3.time.scale().range([0, width1]);
+
+		var y1 = d3.scale.linear().range([height1, 0]);
+		
+		var y2 = d3.scale.linear().range([height2, 0]);
+		
+		var y3 = d3.scale.linear().range([height3, 0]);
+
+		var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom")
+				.tickSize([5]);
+
+		var y1Axis = d3.svg.axis()
+				.scale(y1)
+				.orient("left")
+				.tickFormat(formatPercent)
+				.tickValues([0,0.2,0.4,0.6,0.8,1])
+				.tickSize([5]);
+		
+		var y2Axis = d3.svg.axis()
+				.scale(y2)
+				.tickSize([5])
+				.ticks(5);
+		
+		var y3Axis = d3.svg.axis()
+				.scale(y3)
+				.tickSize([5])
+				.ticks(5);
+
+		var area1 = d3.svg.area()
+				.x(function(d) { return x(d.date); })
+				.y0(function(d) { return y1(d.y0); })
+				.y1(function(d) { return y1(d.y0 + d.y); });
+				
+		var line = d3.svg.line()
+			.x(function(d) { return x(d.date); });
+
+		var stack = d3.layout.stack()
+				.values(function(d) { return d.values; });
+				
+		
+		// add the svg that holds everything
+		var svg = d3.select("body").append("svg")
+				.attr("width", width1 + margin1.left + margin1.right)
+				.attr("height", height1 + margin1.top + margin1.bottom + eventsHeight + (2*eventsMargin) + height2 + margin2.top + margin2.bottom + height3 + margin3.top + margin3.bottom);
+		
+		
+		var eventName = "General Election 2015";
+		
+		// main function that draws the current eventName
+		var drawPlots = function(){
+		
+			// remove old plot
+			svg.selectAll("g").remove();
+			
+			// add a g to hold the first plot (odds)
+			var plot1 = svg.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + margin1.top + ")");
+					
+			// add a g to hold the second plot (seats traded)
+			var plot2 = svg.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + (margin1.top + height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top) + ")");
+			
+			// add a g to hold the third plot (seats changed)
+			var plot3 = svg.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + (margin1.top + height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2 + margin2.bottom + margin3.top) + ")");
+					
+			// add a g to hold the events plot
+			var plot4 = svg.append("g")
+					.attr("transform", "translate(" + margin1.left + "," + margin1.top + ")");
+			
+			// make them all invisible so we can fade in later
+			svg.selectAll("g")
+				.attr("opacity",0);			
+			
+			// grab the config file first (all the plots might need this stuff), then load up all the other csv files
+			d3.csv("data/" + eventName + "/config.csv", function(error, config) {
+			d3.csv("data/" + eventName + "/odds.csv", function(error, odds) {
+			d3.csv("data/" + eventName + "/seats.csv", function(error, seats) {
+			d3.csv("data/" + eventName + "/events.csv", function(error, events) {
+			d3.csv("data/" + eventName + "/changes.csv", function(error, changes) {	
+						
+			
+				//////////////////////////////////////////
+				// Make the implied probabilities graph //
+				//////////////////////////////////////////
+				
+				// First the actual odds
+				odds.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+				
+				var oddsPlots = stack(config.map(function(config) {		// make a map combining config and data, then stack will add y0 for stacking
+					config.values = odds.map(function(d) {return {date: d.date, y: d[config.name] / 100}});
+					return config;
+				}));
+					
+				x.domain(d3.extent(odds, function(d) { return d.date; }));		// let the x scale know it's extents, same axis then used for all 3 plots
+
+				var oddsPlot = plot1.selectAll(".oddsPlot")		// append a g for each data series
+						.data(oddsPlots)
+					.enter().append("g")
+						.attr("class", "oddsPlot");
+
+				oddsPlot.append("path")		// and add a path to each g (these will be the actual plots)
+					.attr("class", "area")
+					.attr("d", function(d) { return area1(d.values); })		// area converts data into a coords for the path 
+					.style("fill", function(d) { return d.color;});			// fill with chosen colors
+				
+				plot1.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height1 + ")")
+					.call(xAxis)
+				.selectAll("text")
+					.attr("visibility","hidden");
+
+				plot1.append("g")
+					.attr("class", "y axis")
+					.call(y1Axis.orient("left"));
+						
+				plot1.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width1 + ",0)")
+					.call(y1Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot1.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 3*margin1.left/4 + "," + height1/2 + ")rotate(-90)")
+					.text("Implied probability");
+								
+				oddsPlot.append("svg:image")
+					.datum(function(d) {return d})
+					.attr("xlink:href", function(d){return "https://www.picodoc.org/wp-content/uploads/datavis/election/data/" + eventName + "/" + d.name + ".svg"} )
+					.attr("y",function(d){return y1(d.logoy) - d.logoSize/2})
+					.attr("x",function(d){return x(parseDate(d.logox)) - d.logoSize/2})
+					.attr("width",function(d){return d.logoSize})
+					.attr("height",function(d){return d.logoSize})
+					.attr("opacity",0)
+					.transition()
+					.delay(1000)
+					.duration(1000)
+					.attr("opacity",1);
+				
+				// some extra labels for the plot
+				plot1.append("text")
+					.attr("class","plot-label")
+					.attr("transform", "translate(" + x(parseDate('2015-05-08 08:00:00.000')) + "," + y1(0.4) + ")")
+					.text("MAJORITY");
+				plot1.append("text")
+					.attr("class","plot-label")
+					.attr("transform", "translate(" + x(parseDate('2015-05-08 02:30:00.000')) + "," + y1(0.66) + ")")
+					.text("MINORITY");
+				plot1.append("text")
+					.attr("class","plot-label")
+					.attr("transform", "translate(" + x(parseDate('2015-05-07 20:00:00.000')) + "," + y1(0.31) + ")")
+					.text("UKIP");
+				plot1.append("text")
+					.attr("class","plot-label")
+					.attr("transform", "translate(" + x(parseDate('2015-05-07 20:00:00.000')) + "," + y1(0.44) + ")")
+					.text("MAJORITY");
+				plot1.append("text")
+					.attr("class","plot-label")
+					.attr("transform", "translate(" + x(parseDate('2015-05-07 20:00:00.000')) + "," + y1(0.75) + ")")
+					.text("MINORITY");
+				plot1.append("text")
+					.attr("class","plot-label")
+					.attr("transform", "translate(" + x(parseDate('2015-05-07 20:00:00.000')) + "," + y1(0.95) + ")")
+					.text("OTHER");
+				
+					
+					
+				//////////////////////////////////
+				// Make the seats won graph     //
+				//////////////////////////////////
+				
+				seats.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+				
+				y2.domain([0,395]);
+				
+				// append a line to show the magic number for a majority
+				plot2.append("rect")
+					.attr("class","eventsline")
+					.attr("y",y2(326))
+					.attr("width",width1)
+					.attr("height",0.01 )
+					.attr("fill-opacity",0)
+					.attr("opacity",0.9)
+					.style("stroke-width",1);
+				plot2.append("text")
+					.attr("font", "11px sans-serif")
+					.attr("font-weight", "bold")
+					.attr("transform", "translate(" + x(parseDate('2015-05-08 00:30:00.000')) + "," + y2(280) + ")")
+					.text("326 seats needed for a majority");
+
+				// append the lines for each party
+				plot2.append("path")
+					.datum(seats)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y2(d.Conservatives); }))
+					.attr("stroke","#11427B");
+					
+				plot2.append("path")
+					.datum(seats)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y2(d.Labour); }))
+					.attr("stroke","#EE2622");
+					
+				plot2.append("path")
+					.datum(seats)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y2(d.SNP); }))
+					.attr("stroke","#FEC401");
+				
+				plot2.append("path")
+					.datum(seats)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y2(d.LD); }))
+					.attr("stroke","#F9B84D");
+				
+				// and add the axis etc				
+				plot2.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height2 + ")")
+					.call(xAxis)
+				.selectAll("text")
+					.attr("visibility","hidden");
+
+				plot2.append("g")
+					.attr("class", "y axis")
+					.call(y2Axis.orient("left"));
+						
+				plot2.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width2 + ",0)")
+					.call(y2Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+					
+				plot2.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 3*margin2.left/4 + "," + height2/2 + ")rotate(-90)")
+					.text("Seats won");
+					
+					
+				
+				//////////////////////////////////
+				// Make the seats changed graph //
+				//////////////////////////////////
+				
+				changes.forEach(function(d) {
+					d.date = parseDate(d.date);
+				});
+				
+				y3.domain([-55,59]);
+
+				// add lines for each party
+				plot3.append("path")
+					.datum(changes)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y3(d.Conservatives); }))
+					.attr("stroke","#11427B");
+					
+				plot3.append("path")
+					.datum(changes)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y3(d.Labour); }))
+					.attr("stroke","#EE2622");
+					
+				plot3.append("path")
+					.datum(changes)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y3(d.SNP); }))
+					.attr("stroke","#FEC401");
+				
+				plot3.append("path")
+					.datum(changes)
+					.attr("class", "line")
+					.attr("d", line.y(function(d) { return y3(d.LD); }))
+					.attr("stroke","#F9B84D");
+					
+				// append a break even line
+				plot3.append("rect")
+					.attr("class","eventsline")
+					.attr("y",y3(0))
+					.attr("width",width1)
+					.attr("height",0.01 )
+					.attr("fill-opacity",0);
+					
+				// and add axis etc.
+				plot3.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height3 + ")")
+					.call(xAxis);
+
+				plot3.append("g")
+					.attr("class", "y axis")
+					.call(y3Axis.orient("left"));
+						
+				plot3.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width3 + ",0)")
+					.call(y3Axis.orient("right"))
+				.selectAll("text")
+					.attr("visibility","hidden");
+						
+				plot3.append("text")
+					.attr("class","axis-label")
+					.attr("transform","translate(" + width3/2 + "," + (height3 + margin3.bottom/1.5) + ")")
+					.text("Time");
+					
+				plot3.append("text")
+					.attr("class","axis-label")
+					.attr("transform", "translate(-" + 3*margin3.left/4 + "," + height3/2 + ")rotate(-90)")
+					.text("Seats changed");
+				
+				
+				///////////////////////////
+				// Make the events panel //
+				///////////////////////////
+					
+				events.forEach(function(d) {
+					d.date = parseDate(d.date);
+					d.end = parseDate(d.end);
+				});
+				
+				// add g's to hold everything
+				var eventsPlot = plot4.selectAll("g")
+				.data(events).enter().append("g")
+					.attr("class","events");
+					
+				// add the event lines
+				eventsPlot.append("rect")
+					.attr("height",height1 + margin1.bottom + eventsHeight + (2*eventsMargin) + margin2.top + height2 + margin2.bottom + margin3.top + height3)
+					.attr("width",function(d){return 0.1 + x(d.end) - x(d.date)})
+					.attr("x",function(d){return x(d.date)})
+					.attr("opacity",0);
+				
+				// add the event circles
+				eventsPlot.append("circle")
+					.attr("r",5)
+					.attr("cy",height1)
+					.attr("cx", function(d){return x(d.date)})
+					.attr("fill", function(d){return d.fill})
+					.attr("opacity",0)
+					.attr("stroke-width",1.5)
+					
+					// on mouseover
+					.on("mouseover",function(d){
+					
+						// make line visible
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0.3);
+							
+						// bubble up the circle
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("r",10)
+							.ease("elastic");
+							
+						// and add the tooltip
+						tooltip = d3.select(this.parentNode).append("foreignObject")
+							.attr("class","svg-tooltip")
+							.attr("x",config[0].eventsx)
+							.attr("y",25 + height1 + margin1.bottom + eventsHeight + (2*eventsMargin))
+							.attr("width", 200)
+							.attr("height", 200).append("xhtml:div");																	
+						tooltip.append("h3")
+							.html(function(d){return d.title});
+						tooltip.append("p")
+							.html(function(d){return d.description});
+					})
+					
+					//on mouseout
+					.on("mouseout",function(d){
+					
+						// make line invisible again
+						d3.select(this.parentNode).select("rect")
+							.transition()
+							.duration(800)
+							.attr("opacity",0);
+						
+						// bubble circle back to normal size
+						d3.select(this)
+							.transition()
+							.duration(800)
+							.attr("r",5)
+							.ease("elastic");
+						
+						// remove previous tooltip
+						svg.selectAll(".svg-tooltip").remove();
+					})
+					
+					.transition()
+					.delay(2000)
+					.duration(1000)
+					.attr("opacity",1)
+				
+				
+				// fade everything in
+				svg.selectAll("g")
+					.transition()
+					.duration(1000)
+					.attr("opacity",1);
+					
+					
+			})})})})});
+			
+		};
+		
+		// draw the initial plot
+		drawPlots();
+
+	</script>
+	
+</body>

@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Education in Northern Ireland</title>
+
+    <meta charset="UTF-8">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.1/dc.css" rel="stylesheet" type="text/css"/>
+    <style>
+        body {
+            font-size: 10px;
+        }
+        .dc-chart g.row text {
+            fill: black;
+            font-size: 10px;
+        }
+        .container{
+            max-width: 270px;
+        }
+
+        .dc-data-grid, .dc-grid-group {clear:both}
+        .dc-data-count {clear:both;}
+        .dc-grid-group {
+            background-color: #F5F5F5;
+            border: 1px solid #E3E3E3;
+            border-radius: 0px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+            margin-bottom: 0px;
+            min-height: 0px;
+            padding: 0px;
+            text-align:center;
+        }
+        .dc-grid-label {
+            margin:2px 0px 2px 0px;
+        }
+        .dc-grid-item {
+            float:left;
+            margin:5px 0px 5px 5px;
+            padding:4px;
+            width:100px;
+            background-color: #F8F8F8;
+            border-color: #E7E7E7;
+            border-radius: 0px;
+            text-align:center;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+        }
+        .dc-grid-top h1 {
+            font-size:10px;
+        }
+        .dc-grid-top h2 {
+            margin-top: 10px;
+            font-size:8px;
+            line-height: 15px;
+            padding:0px;
+        }
+        .school-box {
+            float: right;
+        }
+        .title-box {
+            float: left;
+            width: 50px;
+            height: 40px;
+            display:flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scrollable {
+            height: 170px; /* or any value */
+            overflow-y: auto;
+        }
+        .scrollable-container {
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="row">
+
+        <div id="select1" style="float:right;"></div>
+
+    </div>
+
+    <div class="row">
+
+        <div id="division-chart">
+            Pupil numbers:
+            <div class="clearfix"></div>
+        </div>
+
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+
+        <div id="management-chart">
+            Management:
+            <div class="clearfix"></div>
+        </div>
+
+        <div id="type-chart">
+            School type:
+            <div class="clearfix"></div>
+        </div>
+
+        <div id="age-chart">
+            Age:
+            <div class="clearfix"></div>
+        </div>
+
+    </div>
+
+    <div class="scrollable-container">
+        Schools:
+        <div id="data-grid" class="scrollable">
+            <div class="clearfix"></div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dc/2.1.1/dc.js"></script>
+<script type="text/javascript" src="https://underscorejs.org/underscore-min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.lazyload/1.9.1/jquery.lazyload.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+
+<script type="text/javascript">
+
+    var select1 = dc.selectMenu('#select1');
+    var divisionChart = dc.barChart('#division-chart');
+    var managementChart = dc.rowChart('#management-chart');
+    var typeChart = dc.rowChart('#type-chart');
+    var ageChart = dc.rowChart('#age-chart');
+    var dataGrid = dc.dataGrid("#data-grid");
+
+
+    d3.csv("data.csv", function (raw_data) {
+
+        // debugger
+
+        // do some data cleanup/prep
+        raw_data.forEach(function(d) {
+            d.Catholic_number       = +d.Catholic_number
+            d.Protestant_number     = +d.Protestant_number
+            d.Other_number          = +d.Other_number
+            d.Total                 = +d.Total
+            d.Percentage_Catholic   = +d.Percentage_Catholic
+            d.Percentage_Protestant = +d.Percentage_Protestant
+            d.Percentage_Other      = +d.Percentage_Other
+            // new variable for bucketing in histogram (remove other from the calcuation, just compare sectarian split)
+            d.Catholic_bin          = Math.round((d.Percentage_Catholic / (1 - 0.01 * d.Percentage_Other)) / 5) * 5
+            if ( d.Catholic_bin == 100 ) { d.Catholic_bin = 95}
+        });
+
+        // grouped data by DENI, age, and year (this is the best way I could find to do this, still rubbish...)
+        var grouped_data = _.chain(raw_data)
+            .groupBy(function(d){return d.DENI})
+            .mapObject( DENI => _.groupBy(DENI, 'age'))
+            .mapObject( DENI => _.mapObject(DENI, age => _.groupBy(age, 'year')))
+            .mapObject( DENI => _.mapObject(DENI, age =>_.mapObject(age, year => _.last(year))))
+            .value();
+
+        //debugger;
+
+        // format numbers nicely
+        var numberFormat = d3.format(",.2f");
+
+        var data = crossfilter(raw_data);
+
+        // select year box //
+
+        var year = data.dimension(function (d) {
+            return d.year;
+        });
+
+        select1
+            .dimension(year)
+            .group(year.group())
+            .title(function (d){return d.key;})
+            .controlsUseVisibility(true)
+            .promptValue('1998')  // removed the selectall option
+            .promptText('')
+            .filter('1998');  // and added starting filter (datagrid doesnt work for multi-date)
+
+        // central bar chart //
+
+        var division = data.dimension(function (d) {
+            return d.Catholic_bin ;
+        });
+
+        var divisionGroup = division.group().reduce(
+            function reduceAdd(p, v) {
+                p.Protestant_number = p.Protestant_number + v.Protestant_number;
+                p.Catholic_number = p.Catholic_number + v.Catholic_number
+                p.Other_number = p.Other_number + v.Other_number
+                return p;
+            },
+            function reduceRemove(p, v) {
+                p.Protestant_number = p.Protestant_number - v.Protestant_number;
+                p.Catholic_number = p.Catholic_number - v.Catholic_number
+                p.Other_number = p.Other_number - v.Other_number
+                return p;
+            },
+            function reduceInitial() {
+                return {
+                    Protestant_number:0,
+                    Catholic_number:0,
+                    Other_number:0}
+            });
+
+        divisionChart
+           .width(270)
+           .height(130)
+           .x(d3.scale.linear().domain([0,100]))
+           .xUnits(dc.units.fp.precision(5))
+           .yAxisLabel('',15)
+           .xAxisLabel("Catholic/Protestant split")
+           .elasticY(true)
+           .margins({top: 10, right: 20, bottom: 42, left: 45})
+           .dimension(division)
+           .group(divisionGroup,"Protestant")
+           .ordinalColors(['#4054b2','#73574f','#7bb24c'])
+           .valueAccessor(function(d) { return d.value.Protestant_number; })
+           .stack(divisionGroup,"Other", function(d) {
+               return d.value.Other_number; })
+           .stack(divisionGroup,"Catholic", function(d) {
+               return d.value.Catholic_number; })
+           .legend(dc.legend().x(330).y(5).itemHeight(15).gap(5))
+           .yAxis().ticks(4);
+
+        // filter row charts //
+
+        var management = data.dimension(function (d) {
+            return d.Management_type;
+        });
+        var managementGroup = management.group().reduceSum(function (d) {
+            return d.Total;
+        });
+
+        managementColorScale = d3.scale.ordinal().domain(["Controlled", "Controlled Integrated", "GM Integrated", "Other Maintained", "RC Maintained", "Voluntary"])
+                                                 .range(["#4054b2", "#a57d72", "#a57d72", "#a57d72", "#7bb24c", "#a57d72"]);
+
+        managementChart
+            .width(80)
+            .height(100)
+            .margins({top: 0, left: 10, right: 10, bottom: 20})
+            .group(managementGroup)
+            .dimension(management)
+            .elasticX(true)
+            .colors(managementColorScale)
+            .xAxis().ticks(2);
+
+
+        var type = data.dimension(function (d) {
+            return d.School_type;
+        });
+        var typeGroup = type.group().reduceSum(function (d) {
+            return d.Total;
+        });
+
+        typeColorScale = d3.scale.ordinal().domain(["Grammar", "Secondary", "Primary", "Preparatory"])
+                                           .range(["#fd8d3c", "#fd8d3c", "#fdd0a2", "#fdd0a2"]);
+
+        typeChart
+            .width(80)
+            .height(100)
+            .margins({top: 0, left: 10, right: 10, bottom: 20})
+            .group(typeGroup)
+            .dimension(type)
+            .elasticX(true)
+            .colors(typeColorScale)
+            .ordering(function(d) {
+                return typeOrder.indexOf(d.key);
+            })
+            .xAxis().ticks(2);
+
+        typeOrder = ['Grammar','Secondary','Primary','Preparatory'];
+
+        var age = data.dimension(function (d) {
+            return d.age;
+        });
+        var ageGroup = age.group().reduceSum(function (d) {
+            return d.Total;
+        });
+
+        ageColorScale = d3.scale.ordinal().domain(["Post primary", "Primary"])
+                                          .range(["#fd8d3c", "#fdd0a2"]);
+
+        ageChart
+            .width(80)
+            .height(100)
+            .margins({top: 0, left: 10, right: 10, bottom: 20})
+            .group(ageGroup)
+            .dimension(age)
+            .elasticX(true)
+            .colors(ageColorScale)
+            .xAxis().ticks(2);
+
+        // School details datagrid //
+
+        var town = data.dimension(function (d) {
+            return d.DENI;
+        });
+
+        var tpl = Handlebars.compile($('#datagrid-template').html());
+
+        var generate_grid = function(d) {
+            // get data for this school for both 1998 and 2012
+            // var data = _.extend({},d,grouped_data[d.DENI][d.age]);  // merge in data from both time periods
+
+            // I template some svg elements to generate a mini chart for each element in the grid (each school)
+            // basically it consists of 2 rects, made up of slices showing relative proportions
+            // and the area indicates the size of the school
+            // should make it easy to see what's changed over time, and easily compare schools in a town
+
+            // some constants for templating TODO should maybe move these out of here
+            // TODO in fact basically this whole func can be done up front
+            var data = d;
+            data.svg_width = 40;
+            data.g_width = data.svg_width;
+            data.height = data.svg_width;
+            data.max_Total = 2200;
+
+            data.margin = 1 - Math.min(1,Math.sqrt(data["Total"] / data.max_Total));
+            data['x'] = 0 + data.g_width * data.margin / 2;
+            data['chart_width'] = data.g_width * (1 - data.margin);
+            data["Height_Catholic"] = (1 - data.margin) * data.height * data["Percentage_Catholic"] / 100;
+            data["Height_Other"] = (1 - data.margin) * data.height * data["Percentage_Other"] / 100;
+            data["Height_Protestant"] = (1 - data.margin) * data.height * data["Percentage_Protestant"] / 100;
+            data["y_Catholic"] = data['x'] + 0;
+            data["y_Other"] = data["y_Catholic"] + data["Height_Catholic"];
+            data["y_Protestant"] = data["y_Other"] + data["Height_Other"];
+
+            // pass data to the template function to generate html
+            return tpl(data);
+        }
+
+        dataGrid
+            .width(500)
+            .dimension(town)
+            .group(function (d) {
+                return d.Town;
+            })
+            .size(1000)
+            .html (function(d) {
+                return generate_grid(d);
+            })
+            .sortBy(function (d) {
+                return d.School_name;
+            })
+            .order(d3.ascending)
+            // TODO maybe don't need this...
+            .on('renderlet', function (grid) {
+                $("img.lazy-load").lazyload ({
+                    effect : "fadeIn"
+                })
+                .removeClass("lazy-load");
+            });
+
+        dc.renderAll();
+
+    })
+
+</script>
+<script id="datagrid-template" type="text/x-handlebars-template">
+    <div class="title-box"><h2 title="{{School_name}}">{{School_name}}</div>
+    <svg width="{{svg_width}}" height="{{height}}" class="school-box">
+        <g>
+            <title>
+{{School_name}}
+{{Management_type}} {{School_type}}
+{{Address}}
+Total: {{Total}}
+Catholic: {{Catholic}}
+Other: {{Other}}
+Protestant: {{Protestant}}
+            </title>
+            <rect x="{{x}}" y="{{y_Catholic}}" width="{{chart_width}}" height="{{Height_Catholic}}" fill="#7bb24c" />
+            <rect x="{{x}}" y="{{y_Other}}" width="{{chart_width}}" height="{{Height_Other}}" fill="#73574f" />
+            <rect x="{{x}}" y="{{y_Protestant}}" width="{{chart_width}}" height="{{Height_Protestant}}" fill="#4054b2" />
+        </g>
+    </svg>
+</script>
+</body>
+</html>

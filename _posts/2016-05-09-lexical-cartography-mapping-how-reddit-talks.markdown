@@ -33,7 +33,7 @@ Once we have these word frequency tables, we can start to identify the nations o
 This set certainly shows some interesting variation; while a lot of subreddits share the word “like” as the most-used word (often followed by “get” and “people”), the top set of words can vary significantly. Below is a selection of what the <strong>top ten words</strong> in a few choice subreddits looks like for the week beginning 22nd February 2016 – we’ll look at AskReddit (by far the biggest source of comments in the database), some political subreddits, a national subreddit, and an image-based subreddit.
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/redditComments/first/topSubsTable_colourUp.html" width="120%" height="300" frameBorder="0"> </iframe>
+<iframe src="/assets/redditComments/first/topSubsTable_colourUp.html" width="120%" height="300" frameBorder="0"> </iframe>
 </div>
 
 In these top ten, variation and connection is immediately evident. In particular, Politics, SandersForPresident and The_Donald share the names of the party hopefuls in the upcoming US election. Not many other subreddits will have “Bernie” or “Trump” at the top of the table, though SandersForPresident is alone in talking about itself so much. unitedkingdom on the other hand is more concerned with the EU and the UK’s place in it, while BlackPeopleTwitter is filled with amusing notions on how white and black people talk in the US. Everyone likes talking about people, about getting something, or about liking something (or, possibly, likening two somethings). Each subreddit is its own pseudo-island with its own manner and topic of speech. We can see if by comparing them we can start to group subreddits together into clusters, or nations, based on how similar this speech is.
@@ -58,7 +58,7 @@ To get the lexical separation between subreddits then, we can sum this differenc
 One of the more prominent new subreddits is /r/SandersForPresident (<strong>SFP</strong>) – in the last week of February 2016, this subreddit was ranked 5th in all of reddit by words used. Using the above metric, how well-connected SFP to other subreddits? We’d expect that it would have a great connection to political subreddits at least, and probably most of the news subreddits as well. The<strong> ten most connected subreddits</strong> for SFP in this week are listed below, along with the lexical separations, to get a sense of closeness:
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/redditComments/first/SFPtop10_up.html" width="120%" height="300" frameBorder="0"> </iframe>
+<iframe src="/assets/redditComments/first/SFPtop10_up.html" width="120%" height="300" frameBorder="0"> </iframe>
 </div>
 
 Politics, the subreddit for his main rival, news subreddits, and other national subreddits which are concerned about politics are right up there. There’s always plenty of political discourse on explainlikeimfive and dataisbeautiful during election season as well. As we’ll see, a closest match at 11.5 is good but not great, which we might expect – “Bernie” is not a common top word.
@@ -66,13 +66,13 @@ Politics, the subreddit for his main rival, news subreddits, and other national 
 Then, let’s look at the other end of the scale – what is SFP least connected to? As it turns out, it’s almost entirely foreign language subreddits (Sweden, france, de etc). This is great for validation of the metric, but not so informative. So let’s look at <strong>SFP’s bottom ten English subreddits</strong>:
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/redditComments/first/SFPbottom10_up.html" width="120%" height="300" frameBorder="0"> </iframe>
+<iframe src="/assets/redditComments/first/SFPbottom10_up.html" width="120%" height="300" frameBorder="0"> </iframe>
 </div>
 
 Number one (by <em>least</em> connectedness) is spam. Number two is a satirical subreddit about computer hardware, and three is a twitter recording subreddit about UFOs (perhaps a little surprising considering conspiracy matches so well!). The remainder is computer hardware and game trading, as well as anime and music – hobby subreddits. Obviously, SFP is Serious Business. Let’s look at the<strong> table of selected subreddits</strong> from earlier, but focus on their <strong>best LS matches</strong> to other subreddits rather than the top words they use:
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/redditComments/first/topDVsTable_up.html" width="130%" height="300" frameBorder="0"> </iframe>
+<iframe src="/assets/redditComments/first/topDVsTable_up.html" width="130%" height="300" frameBorder="0"> </iframe>
 </div>
 
 Each of these seem like sensible matches – AskReddit matches well to popular general-topic subreddits, politics matches well to subreddits dealing with the issues of the day (as do SFP and The_Donald), unitedkingdom matches best to other national subreddits, and BlackPeopleTwitter matches well to other images-of-social-media subreddits (and image based subreddits in general).
@@ -80,7 +80,7 @@ Each of these seem like sensible matches – AskReddit matches well to popular g
 So what about the rest of the subreddits? We can do exactly the same process for all 300 top subreddits, and form a matrix of their relational values. A compressed table of the <strong>top 100 subreddits and their LS to each other subreddit</strong> are shown below – red is very well matched (LS &lt; 10), and white poorly matched (LS &gt; 30), with gradient colour in between. Mouseover to see the LS as well as the subreddits, and see if you can spot any interesting matches! Note self-matches are zero, and are set as grey. Additionally, this plot runs slowly in IE – if possible, use Chrome or Firefox.
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/redditComments/first/expandingTable_up.html" width="120%" height="460" frameBorder="0"> </iframe>
+<iframe src="/assets/redditComments/first/expandingTable_up.html" width="120%" height="460" frameBorder="0"> </iframe>
 </div>
 
 The top-left section of the table is almost entirely default-subscription or massively popular subreddits. They’re usually quite well matched, due most likely to having such a large subscription base, with no specific topic in many cases, leading to casual conversation tending towards common words.
@@ -104,7 +104,7 @@ In doing this, we can create a <strong>map of the lexical nations of reddit</str
 The different colours represent division into different communities, and clicking the subreddit shows that community’s top ten words by RV. Subreddit node size is logarithmically related to the words used in the subreddit this week.
 
 <div class="responsive-wrap">
-<iframe src="https://www.picodoc.org/wp-content/uploads/redditComments/first/singleSigmaCommunityF.html" width="140%" height="820" frameBorder="0"> </iframe>
+<iframe src="/assets/redditComments/first/singleSigmaCommunityF.html" width="140%" height="820" frameBorder="0"> </iframe>
 </div>
 
 There are a few very interesting features here! Firstly, let’s address the islands floating off on the side; these are connected to each other, but not the main web of comments. If the lexical nation analogy holds, these are island nations with their own niche interests. The main continent has a central region made up of the defaults and discussion subreddits (orange, containing AskReddit, relationships, WTF and a host of other ask- subreddits), news and politics subreddits (light blue, containing news, various national subreddits and subreddits for various movements), and game-related subreddits (leagueoflegends, starcraft, destinythegame).
