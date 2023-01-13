@@ -6,7 +6,7 @@ date: 2018-05-17 10:16:11.000000000 +00:00
 permalink: "/visualising-the-n-i-bus-network-you-wait-for-ages-and-3743-show-up-at-once/"
 ---
 
-__Full credit for this post goes to Ryan McCarron__
+__This post was a collaboration with Ryan McCarron__
 
 Translink recently made available their set of Ulsterbus, Goldline and Metro timetables and routes on [Open Data NI](https://www.opendatani.gov.uk/organization/translink). We combined these data sets to find the expected position of each bus in the dataset at one minute intervals throughout the 3,743 valid timetabled routes listed.
 
@@ -23,7 +23,7 @@ Firstly, notes on what's here. These bus services:
 * Operate on Mondays
 * Are in the dataset
 * Are valid in April 2018
-<
+
 These restrictions were to avoid overlap of similar services operating differently on different days of the week. There were some timetabled routes which were running at unusual times (e.g. 36 o'clock), and since we're not capable of handling nth dimensional time, we discarded these routes. Secondly, there were some data missing from the set entirely: most notably the "Derry City" subset didn't contain any local metro service information, so the visualisation above will not necessarily contain data for all routes.
 
 This data gives a fascinating insight into how Translink has to support the needs of the NI populace. The first example of this is the very first bus in the visualisation: the 00:50 X4 service, which runs to make sure people in Derry/Londonderry can catch early flights out of Dublin.

@@ -11,4 +11,4 @@ The UK's recent decision to leave the European Union and the recent snap assembl
 
 Paul Nolan's article covered in both [the Irish Times](https://www.irishtimes.com/news/ireland/irish-news/two-tribes-a-divided-northern-ireland-1.3030921) and in full on [the detail](https://www.thedetail.tv/articles/northern-ireland-living-apart-together) as part of this project is a really great read.
 
-The full interactive maps can be found [here](https://www.thedetail.tv/mapfiles/).
+The full interactive maps can be found [here](/assets/censusni/).
