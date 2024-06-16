@@ -21,9 +21,9 @@
 title: picodoc
 email: matt.david.doherty@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
-domain: "http://picodoc.github.io"
+domain: "http://picodoc.org"
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://http://picodoc.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://picodoc.org" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: picodoco
 github_username: picoDoc
 linkedin_username: matthewddoherty
