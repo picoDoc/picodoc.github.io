@@ -5,18 +5,20 @@ date: 2026-02-12 09:00:00.000000000 +00:00
 permalink: "/ni-census-2021-map/"
 ---
 
-Almost 10 years ago I worked on a [mapping project]({% post_url 2017-04-05-living-apart-together %}) with the detail that was published in the Irish Times.  In 2021 NI completed [another census](https://www.nisra.gov.uk/statistics/census/census-2021), and the grid square data that I relied on for the original project was recently released too.
+Almost 10 years ago I had the pleasure of working on a [mapping project]({% post_url 2017-04-05-living-apart-together %}) with The Detail that was also published in the Irish Times.  In 2021 NI completed [another census](https://www.nisra.gov.uk/statistics/census/census-2021), and the grid square data that I relied on for the original project was recently released too.
 
 I've now updated my original [maps](/assets/censusni/) to include a 6th time option: 2021.
 
 Nothing dramatic has changed in those 10 years in NI, but you can start to see some patterns in certain areas.  Inner Belfast, especially in the east, and the areas around Stormont and Stranmillis have noticably hollowed out and become less dense
 
-
+![belfast](https://github.com/user-attachments/assets/5ce2a37d-27cd-4a36-98f2-868ae1b13502)
 
 North Lisburn has grown alot (where I'm from), and the growth has been very integrated in terms of religion.  I can confirm there are alot less fields near my parents house now!
 
-
+![lisburn](https://github.com/user-attachments/assets/75cbb815-5c61-4e74-b4aa-bf6df8ca85c7)
 
 And East Derry shows a similar story.
+
+![derry](https://github.com/user-attachments/assets/3e641226-2bd6-47d4-a903-482d9275794f)
 
 Feel free to explore, and see what other patterns you can find!
