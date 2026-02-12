@@ -11,14 +11,14 @@ I've now updated my original [maps](/assets/censusni/) to include a 6th time opt
 
 Nothing dramatic has changed in those 10 years in NI, but you can start to see some patterns in certain areas.  Inner Belfast, especially in the east, and the areas around Stormont and Stranmillis have noticably hollowed out and become less dense
 
-![belfast](https://github.com/user-attachments/assets/5ce2a37d-27cd-4a36-98f2-868ae1b13502)
+![belfast](/assets/2023/01/belfast.gif)
 
 North Lisburn has grown alot (where I'm from), and the growth has been very integrated in terms of religion.  I can confirm there are alot less fields near my parents house now!
 
-![lisburn](https://github.com/user-attachments/assets/75cbb815-5c61-4e74-b4aa-bf6df8ca85c7)
+![lisburn](/assets/2023/01/lisburn.gif)
 
 And East Derry shows a similar story.
 
-![derry](https://github.com/user-attachments/assets/3e641226-2bd6-47d4-a903-482d9275794f)
+![derry](/assets/2023/01/derry.jpg)
 
 Feel free to explore, and see what other patterns you can find!
