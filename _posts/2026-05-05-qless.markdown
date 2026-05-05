@@ -1,0 +1,8 @@
+---
+layout: post
+title: 'qless: read kdb+ data without kdb+?'
+date: 2026-05-05 09:00:00.000000000 +00:00
+permalink: "/qless/"
+---
+
+I put togther a (very) simple python tool that allows you to directly memory map and read kdb+ data on disk, without the kdb+ binary.  Have a quick look at the [README](https://github.com/picoDoc/qless) for more info
