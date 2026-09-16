@@ -6,7 +6,7 @@ permalink: "/who-needs-an-rdb/"
 ---
 
 I've followed up original "Who needs an rdb?" post with two others over on the DI blog:
-* [TorQ: No stinking rdbs](https://dataintellect.com/blog/torq-no-stinking-rdbs/) - Adding a TorQ pack to let other easily take my approach
-* [The last good reason for an rdb: the return of the attribute](https://dataintellect.com/blog/the-last-good-reason-for-an-rdb-the-return-of-the-attribute/) - And an approach to have appendable attributes, and close the remaining performance gap
+* [TorQ: No stinking rdbs](https://dataintellect.com/blog/torq-no-stinking-rdbs/) - Adding a TorQ pack to let others easily copy my approach
+* [The last good reason for an rdb: the return of the attribute](https://dataintellect.com/blog/the-last-good-reason-for-an-rdb-the-return-of-the-attribute/) - And an approach to have appendable attributes, and close the remaining performance gap with rdbs
 
-I wanted to call it my rdbs are shit trilogy, but I was advised against it by people who are less fun.
+I wanted to call it my rdbs are shit trilogy, but I was advised against it by people who are less fun.  Hopefully people find the ideas useful!
