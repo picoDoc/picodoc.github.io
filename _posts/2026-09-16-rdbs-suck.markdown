@@ -2,7 +2,7 @@
 layout: post
 title: 'Who needs an rdb, the trilogy'
 date: 2026-09-16 09:00:00.000000000 +00:00
-permalink: "/who-needs-an-rdb/"
+permalink: "/rdbs-suck/"
 ---
 
 I've followed up original "Who needs an rdb?" post with two others over on the DI blog:
